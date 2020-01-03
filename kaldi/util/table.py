@@ -841,7 +841,24 @@ class DoubleMatrixWriter(_WriterBase, _kaldi_table.DoubleMatrixWriter):
         """
         super(DoubleMatrixWriter, self).write(key, _matrix.DoubleMatrix(value))
 
+      
+class CompressedMatrixWriter(_WriterBase, _kaldi_table.CompressedMatrixWriter):
+    """Table writer for compressed matrices."""
+    def write(self, key, value):
+        """Writes the `(key, value)` pair to the table.
 
+        This method is provided for compatibility with the C++ API only;
+        most users should use the Pythonic API.
+
+        Args:
+            key (str): The key.
+            value: The value.
+        """
+        if not isinstance(value, _matrix.compressed.CompressedMatrix):
+            raise ValueError("value needs to be a CompressedMatrix")
+        super(CompressedMatrixWriter, self).write(key, value)
+      
+      
 class WaveWriter(_WriterBase, _kaldi_table.WaveWriter):
     """Table writer for wave files."""
     pass
