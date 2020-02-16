@@ -16,8 +16,10 @@ import setuptools.extension
 from distutils.file_util import copy_file
 from setuptools import setup, find_packages, Command
 
+
 def check_output(*args, **kwargs):
     return subprocess.check_output(*args, **kwargs).decode("utf-8").strip()
+
 
 ################################################################################
 # Set minimum version requirements for external dependencies
@@ -45,7 +47,7 @@ if not (os.path.isfile(PYCLIF) and os.access(PYCLIF, os.X_OK)):
         PYCLIF = check_output(['which', 'pyclif'])
     except subprocess.CalledProcessError:
         print("\nCould not find pyclif.\nPlease add pyclif binary to your PATH "
-             "or set PYCLIF environment variable.", file=sys.stderr)
+              "or set PYCLIF environment variable.", file=sys.stderr)
         sys.exit(1)
 
 if not CLIF_MATCHER:
@@ -62,7 +64,7 @@ CLANG = os.path.join(os.path.dirname(CLIF_MATCHER), "clang")
 RESOURCE_DIR = check_output("echo '#include <limits.h>' | {} -xc -v - 2>&1 "
                             "| tr ' ' '\n' | grep -A1 resource-dir | tail -1"
                             .format(CLANG), shell=True)
-CLIF_CXX_FLAGS="-I{}/include".format(RESOURCE_DIR)
+CLIF_CXX_FLAGS = "-I{}/include".format(RESOURCE_DIR)
 
 if not KALDI_DIR:
     KALDI_DIR = os.path.join(CWD, "tools/kaldi")
@@ -70,9 +72,9 @@ KALDI_DIR = os.path.abspath(KALDI_DIR)
 
 KALDI_MK_PATH = os.path.join(KALDI_DIR, "src", "kaldi.mk")
 if not os.path.isfile(KALDI_MK_PATH):
-  print("\nCould not find Kaldi.\nPlease install Kaldi under the tools "
-        "directory or set KALDI_DIR environment variable.", file=sys.stderr)
-  sys.exit(1)
+    print("\nCould not find Kaldi.\nPlease install Kaldi under the tools "
+          "directory or set KALDI_DIR environment variable.", file=sys.stderr)
+    sys.exit(1)
 
 try:
     KALDI_HEAD = check_output(['git', '-C', KALDI_DIR, 'rev-parse', 'HEAD'])
@@ -148,6 +150,7 @@ if not MAKE_NUM_JOBS:
 MAKE_ARGS = ['-j', MAKE_NUM_JOBS]
 try:
     import ninja
+
     CMAKE_GENERATOR = '-GNinja'
     MAKE = 'ninja'
     if DEBUG:
@@ -159,7 +162,7 @@ except ImportError:
         MAKE_ARGS += ['-d']
 
 if DEBUG:
-    print("#"*50)
+    print("#" * 50)
     print("CWD:", CWD)
     print("PYCLIF:", PYCLIF)
     print("CLIF_MATCHER:", CLIF_MATCHER)
@@ -174,7 +177,8 @@ if DEBUG:
         print("CUDA_LD_FLAGS:", CUDA_LD_FLAGS)
         print("CUDA_LD_LIBS:", CUDA_LD_LIBS)
     print("MAKE:", MAKE, *MAKE_ARGS)
-    print("#"*50)
+    print("#" * 50)
+
 
 ################################################################################
 # Use CMake to build Python extensions in parallel
@@ -182,9 +186,11 @@ if DEBUG:
 
 class Extension(setuptools.extension.Extension):
     """Dummy extension class that only holds the name of the extension."""
+
     def __init__(self, name):
         setuptools.extension.Extension.__init__(self, name, [])
         self._needs_stub = False
+
     def __str__(self):
         return "Extension({})".format(self.name)
 
@@ -226,18 +232,18 @@ class build_ext(setuptools.command.build_ext.build_ext):
                       '-DCLIF_CXX_FLAGS=' + CLIF_CXX_FLAGS,
                       '-DLD_FLAGS=' + LD_FLAGS,
                       '-DLD_LIBS=' + LD_LIBS,
-                      '-DNUMPY_INC_DIR='+ np.get_include(),
+                      '-DNUMPY_INC_DIR=' + np.get_include(),
                       '-DCUDA=TRUE' if CUDA else '-DCUDA=FALSE',
                       '-DTFRNNLM=TRUE' if KALDI_TFRNNLM else '-DTFRNNLM=FALSE',
                       '-DDEBUG=TRUE' if DEBUG else '-DDEBUG=FALSE']
 
         if CUDA:
-            CMAKE_ARGS +=['-DCUDA_LD_FLAGS=' + CUDA_LD_FLAGS,
-                          '-DCUDA_LD_LIBS=' + CUDA_LD_LIBS]
+            CMAKE_ARGS += ['-DCUDA_LD_FLAGS=' + CUDA_LD_FLAGS,
+                           '-DCUDA_LD_LIBS=' + CUDA_LD_LIBS]
 
         if KALDI_TFRNNLM:
-            CMAKE_ARGS +=['-DTFRNNLM_CXX_FLAGS=' + TFRNNLM_CXX_FLAGS,
-                          '-DTF_LIB_DIR=' + TF_LIB_DIR]
+            CMAKE_ARGS += ['-DTFRNNLM_CXX_FLAGS=' + TFRNNLM_CXX_FLAGS,
+                           '-DTF_LIB_DIR=' + TF_LIB_DIR]
 
         if CMAKE_GENERATOR:
             CMAKE_ARGS += [CMAKE_GENERATOR]
@@ -251,13 +257,13 @@ class build_ext(setuptools.command.build_ext.build_ext):
             os.makedirs(BUILD_DIR)
 
         try:
-            subprocess.check_call(['cmake', '..'] + CMAKE_ARGS, cwd = BUILD_DIR)
-            subprocess.check_call([MAKE] + MAKE_ARGS, cwd = BUILD_DIR)
+            subprocess.check_call(['cmake', '..'] + CMAKE_ARGS, cwd=BUILD_DIR)
+            subprocess.check_call([MAKE] + MAKE_ARGS, cwd=BUILD_DIR)
         except subprocess.CalledProcessError as err:
             # We catch this exception to disable stack trace.
             print(str(err), file=sys.stderr)
             sys.exit(1)
-        print() # Add an empty line for cleaner output
+        print()  # Add an empty line for cleaner output
 
         self.extensions = populate_extension_list()
 
@@ -293,7 +299,7 @@ class build_sphinx(Command):
     def run(self):
         try:
             import sphinx
-            subprocess.check_call([MAKE, 'docs'], cwd = BUILD_DIR)
+            subprocess.check_call([MAKE, 'docs'], cwd=BUILD_DIR)
         except ImportError:
             print("Sphinx was not found. Install it using pip install sphinx.",
                   file=sys.stderr)
@@ -329,25 +335,23 @@ extensions = [Extension("kaldi")]
 
 packages = find_packages(exclude=["tests.*", "tests"])
 
-with open(os.path.join('kaldi', '__version__.py')) as f:
-    exec(f.read())
 
-setup(name = 'pykaldi',
-      version = __version__,
-      description = 'A Python wrapper for Kaldi',
-      author = 'Dogan Can, Victor Martinez',
+setup(name='pykaldi',
+      version='0.1.2',
+      description='A Python wrapper for Kaldi',
+      author='Dogan Can, Victor Martinez',
       ext_modules=extensions,
-      cmdclass = {
+      cmdclass={
           'build': build,
           'build_ext': build_ext,
           'build_sphinx': build_sphinx,
           'install_lib': install_lib,
           'test_cuda': test_cuda,
-          },
-      packages = packages,
-      package_data = {},
-      install_requires = ['enum34;python_version<"3.4"', 'numpy'],
+      },
+      packages=packages,
+      package_data={},
+      install_requires=['enum34;python_version<"3.4"', 'numpy'],
       setup_requires=['pytest-runner'],
       tests_require=['pytest'],
-      zip_safe = False,
+      zip_safe=False,
       test_suite='tests')
