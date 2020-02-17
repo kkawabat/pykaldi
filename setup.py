@@ -60,6 +60,8 @@ def install_clif_dep():
             pyclif_path = find_clif_dep()
             clif_matcher_path = find_clif_matcher()
         except (subprocess.CalledProcessError, FileNotFoundError):
+            import traceback
+            traceback.print_exc()
             print("\nCould not find pyclif and attempt to install failed"
                   "\nPlease add pyclif binary to your PATH or set PYCLIF environment variable.", file=sys.stderr)
             sys.exit(1)
