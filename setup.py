@@ -23,13 +23,18 @@ def check_output(*args, **kwargs):
     return subprocess.check_output(*args, **kwargs).decode("utf-8").strip()
 
 
+def check_call(*args, **kwargs):
+    return subprocess.check_call(*args, **kwargs)
+
+
 def install_system_dep():
     try:
+        print("installing system dependencies")
         if platform.system().startswith("Linux"):
-            system_packages = 'autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev'.split()
-            subprocess.call(['sudo', 'apt-get', 'install'] + system_packages)
+            system_packages = 'autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev'
+            check_call('sudo apt-get install ' + system_packages, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
         elif platform.system() == "Darwin":
-            subprocess.call('brew install automake cmake git graphviz libtool pkg-config wget'.split())
+            check_call('brew install automake cmake git graphviz libtool pkg-config wget', shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
         else:
             print("\npykaldi is only compatible with linux or OS X", file=sys.stderr)
             sys.exit(1)
@@ -38,33 +43,40 @@ def install_system_dep():
         sys.exit(1)
 
 
-def install_pyclif():
+def install_clif_dep():
     """look for pyclif if not found try and install pyclif, if install fails then exit setup process"""
     try:
-        pyclif_path = find_pyclif()
-    except subprocess.CalledProcessError:
+        pyclif_path = find_clif_dep()
+        clif_matcher_path = find_clif_matcher()
+        print("clif_dep found")
+        print(f"{pyclif_path}")
+        print(f"{clif_matcher_path}")
+    except (subprocess.CalledProcessError, FileNotFoundError):
         try:
             print("\nCould not find pyclif.\nattempting to install it..", file=sys.stderr)
             print("\ninstalling pyclif dependency (protobuf)...", file=sys.stderr)
-            check_output(["/bin/bash", "install_protobuf.sh"], cwd=os.path.join(CWD, 'tools'))
+            check_call(["./check_dependencies.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+            check_call(["./install_protobuf.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
             print("\ninstalling pyclif...", file=sys.stderr)
-            check_output(["/bin/bash", "install_clif.sh"], cwd=os.path.join(CWD, 'tools'))
-            pyclif_path = find_pyclif()
-        except subprocess.CalledProcessError:
+            check_call(["./install_clif.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+            pyclif_path = find_clif_dep()
+            clif_matcher_path = find_clif_matcher()
+        except (subprocess.CalledProcessError, FileNotFoundError):
             print("\nCould not find pyclif and attempt to install failed"
                   "\nPlease add pyclif binary to your PATH or set PYCLIF environment variable.", file=sys.stderr)
             sys.exit(1)
-    return pyclif_path
+    return pyclif_path, clif_matcher_path
 
 
-def find_pyclif():
+def find_clif_dep():
     pyclif_path = os.getenv("PYCLIF")
     if not pyclif_path:
         pyclif_path = os.path.join(sys.prefix, 'bin/pyclif')
     pyclif_path = os.path.abspath(pyclif_path)
 
     if not (os.path.isfile(pyclif_path) and os.access(pyclif_path, os.X_OK)):
-        pyclif_path = check_output(['which', 'pyclif'])
+        raise FileNotFoundError("\nCould not find pyclif.\nPlease make sure PYCLIF was installed "
+                                "under the current python environment or set PYCLIF environment variable.")
     return pyclif_path
 
 
@@ -75,10 +87,8 @@ def find_clif_matcher():
     clif_matcher_path = os.path.abspath(clif_matcher_path)
 
     if not (os.path.isfile(clif_matcher_path) and os.access(clif_matcher_path, os.X_OK)):
-        print("\nCould not find clif-matcher.\nPlease make sure CLIF was installed "
-              "under the current python environment or set CLIF_MATCHER "
-              "environment variable.", file=sys.stderr)
-        sys.exit(1)
+        raise FileNotFoundError("\nCould not find clif-matcher.\nPlease make sure CLIF was installed "
+                                "under the current python environment or set CLIF_MATCHER environment variable.")
     return clif_matcher_path
 
 
@@ -88,7 +98,7 @@ def install_kaldi():
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("\nCould not find pykaldi or kaldi version out of date.\nattempting to install it..", file=sys.stderr)
         try:
-            check_output(["/bin/bash", "install_kaldi.sh"], cwd=os.path.join(CWD, 'tools'))
+            check_call(["./install_kaldi.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
             kaldi_dir, kaldi_mk_path = find_kaldi()
         except Exception as e:
             print(f"\nattempt to install kaldi failed.. {repr(e)}", file=sys.stderr)
@@ -105,7 +115,7 @@ def find_kaldi():
     kaldi_mk_path = os.path.join(kaldi_dir, "src", "kaldi.mk")
 
     if not os.path.isfile(kaldi_mk_path):
-        raise FileNotFoundError("Could not find Kaldi.Please install Kaldi under the tools "
+        raise FileNotFoundError("Could not find Kaldi. Please install Kaldi under the tools "
                                 "directory or set KALDI_DIR environment variable.")
 
     kaldi_head = check_output(['git', '-C', kaldi_dir, 'rev-parse', 'HEAD'])
@@ -130,8 +140,7 @@ DEBUG = os.getenv('DEBUG', 'NO').upper() in ['ON', '1', 'YES', 'TRUE', 'Y']
 install_system_dep()
 BUILD_DIR = os.path.join(CWD, 'build')
 
-PYCLIF = install_pyclif()
-CLIF_MATCHER = find_clif_matcher()
+PYCLIF, CLIF_MATCHER = install_clif_dep()
 KALDI_DIR, KALDI_MK_PATH = install_kaldi()
 
 CLANG = os.path.join(os.path.dirname(CLIF_MATCHER), "clang")
