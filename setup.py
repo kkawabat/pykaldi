@@ -16,9 +16,102 @@ import setuptools.extension
 from distutils.file_util import copy_file
 from setuptools import setup, find_packages, Command
 
+CWD = os.path.dirname(os.path.abspath(__file__))
+
 
 def check_output(*args, **kwargs):
     return subprocess.check_output(*args, **kwargs).decode("utf-8").strip()
+
+
+def install_system_dep():
+    try:
+        if platform.system().startswith("Linux"):
+            system_packages = 'autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev'.split()
+            subprocess.call(['sudo', 'apt-get', 'install'] + system_packages)
+        elif platform.system() == "Darwin":
+            subprocess.call('brew install automake cmake git graphviz libtool pkg-config wget'.split())
+        else:
+            print("\npykaldi is only compatible with linux or OS X", file=sys.stderr)
+            sys.exit(1)
+    except Exception as e:
+        print(f"\nexception occured while installing system dependencies {repr(e)}", file=sys.stderr)
+        sys.exit(1)
+
+
+def install_pyclif():
+    """look for pyclif if not found try and install pyclif, if install fails then exit setup process"""
+    try:
+        pyclif_path = find_pyclif()
+    except subprocess.CalledProcessError:
+        print("\nCould not find pyclif.\nattempting to install it..", file=sys.stderr)
+        print("\ninstalling pyclif dependency (protobuf)", file=sys.stderr)
+        try:
+            check_output(["/bin/bash", "install_protobuf.sh"], cwd=os.path.join(CWD, 'tools'))
+            check_output(["/bin/bash", "install_clif.sh"], cwd=os.path.join(CWD, 'tools'))
+            pyclif_path = find_pyclif()
+        except subprocess.CalledProcessError:
+            print("\nCould not find pyclif and attempt to install failed"
+                  "\nPlease add pyclif binary to your PATH or set PYCLIF environment variable.", file=sys.stderr)
+            sys.exit(1)
+    return pyclif_path
+
+
+def find_pyclif():
+    pyclif_path = os.getenv("PYCLIF")
+    if not PYCLIF:
+        pyclif_path = os.path.join(sys.prefix, 'bin/pyclif')
+    pyclif_path = os.path.abspath(pyclif_path)
+
+    if not (os.path.isfile(pyclif_path) and os.access(pyclif_path, os.X_OK)):
+        pyclif_path = check_output(['which', 'pyclif'])
+    return pyclif_path
+
+
+def find_clif_matcher():
+    clif_matcher_path = os.getenv('CLIF_MATCHER')
+    if not clif_matcher_path:
+        clif_matcher_path = os.path.join(sys.prefix, 'clang/bin/clif-matcher')
+    clif_matcher_path = os.path.abspath(clif_matcher_path)
+
+    if not (os.path.isfile(clif_matcher_path) and os.access(clif_matcher_path, os.X_OK)):
+        print("\nCould not find clif-matcher.\nPlease make sure CLIF was installed "
+              "under the current python environment or set CLIF_MATCHER "
+              "environment variable.", file=sys.stderr)
+        sys.exit(1)
+    return clif_matcher_path
+
+
+def install_kaldi():
+    try:
+        kaldi_dir, kaldi_mk_path = find_kaldi()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("\nCould not find pykaldi or kaldi version out of date.\nattempting to install it..", file=sys.stderr)
+        try:
+            check_output(["/bin/bash", "install_kaldi.sh"], cwd=os.path.join(CWD, 'tools'))
+            kaldi_dir, kaldi_mk_path = find_kaldi()
+        except Exception as e:
+            print(f"\nattempt to install kaldi failed.. {repr(e)}", file=sys.stderr)
+            sys.exit(1)
+    return kaldi_dir, kaldi_mk_path
+
+
+def find_kaldi():
+    kaldi_dir = os.getenv('KALDI_DIR')
+    if not kaldi_dir:
+        kaldi_dir = os.path.join(CWD, "tools/kaldi")
+    kaldi_dir = os.path.abspath(kaldi_dir)
+
+    kaldi_mk_path = os.path.join(kaldi_dir, "src", "kaldi.mk")
+
+    if not os.path.isfile(kaldi_mk_path):
+        raise FileNotFoundError("Could not find Kaldi.Please install Kaldi under the tools "
+                                "directory or set KALDI_DIR environment variable.")
+
+    kaldi_head = check_output(['git', '-C', kaldi_dir, 'rev-parse', 'HEAD'])
+    subprocess.check_call(['git', '-C', kaldi_dir, 'merge-base',
+                           '--is-ancestor', KALDI_MIN_REQUIRED, kaldi_head])
+
+    return kaldi_dir, kaldi_mk_path
 
 
 ################################################################################
@@ -32,59 +125,19 @@ KALDI_MIN_REQUIRED = '5dc5d41bb603ba935c6244c7b32788ea90b9cee3'
 ################################################################################
 
 DEBUG = os.getenv('DEBUG', 'NO').upper() in ['ON', '1', 'YES', 'TRUE', 'Y']
-PYCLIF = os.getenv("PYCLIF")
-CLIF_MATCHER = os.getenv('CLIF_MATCHER')
-KALDI_DIR = os.getenv('KALDI_DIR')
-CWD = os.path.dirname(os.path.abspath(__file__))
+
+install_system_dep()
 BUILD_DIR = os.path.join(CWD, 'build')
 
-if not PYCLIF:
-    PYCLIF = os.path.join(sys.prefix, 'bin/pyclif')
-PYCLIF = os.path.abspath(PYCLIF)
-
-if not (os.path.isfile(PYCLIF) and os.access(PYCLIF, os.X_OK)):
-    try:
-        PYCLIF = check_output(['which', 'pyclif'])
-    except subprocess.CalledProcessError:
-        print("\nCould not find pyclif.\nPlease add pyclif binary to your PATH "
-              "or set PYCLIF environment variable.", file=sys.stderr)
-        sys.exit(1)
-
-if not CLIF_MATCHER:
-    CLIF_MATCHER = os.path.join(sys.prefix, 'clang/bin/clif-matcher')
-CLIF_MATCHER = os.path.abspath(CLIF_MATCHER)
-
-if not (os.path.isfile(CLIF_MATCHER) and os.access(CLIF_MATCHER, os.X_OK)):
-    print("\nCould not find clif-matcher.\nPlease make sure CLIF was installed "
-          "under the current python environment or set CLIF_MATCHER "
-          "environment variable.", file=sys.stderr)
-    sys.exit(1)
+PYCLIF = install_pyclif()
+CLIF_MATCHER = find_clif_matcher()
+KALDI_DIR, KALDI_MK_PATH = install_kaldi()
 
 CLANG = os.path.join(os.path.dirname(CLIF_MATCHER), "clang")
 RESOURCE_DIR = check_output("echo '#include <limits.h>' | {} -xc -v - 2>&1 "
                             "| tr ' ' '\n' | grep -A1 resource-dir | tail -1"
                             .format(CLANG), shell=True)
 CLIF_CXX_FLAGS = "-I{}/include".format(RESOURCE_DIR)
-
-if not KALDI_DIR:
-    KALDI_DIR = os.path.join(CWD, "tools/kaldi")
-KALDI_DIR = os.path.abspath(KALDI_DIR)
-
-KALDI_MK_PATH = os.path.join(KALDI_DIR, "src", "kaldi.mk")
-if not os.path.isfile(KALDI_MK_PATH):
-    print("\nCould not find Kaldi.\nPlease install Kaldi under the tools "
-          "directory or set KALDI_DIR environment variable.", file=sys.stderr)
-    sys.exit(1)
-
-try:
-    KALDI_HEAD = check_output(['git', '-C', KALDI_DIR, 'rev-parse', 'HEAD'])
-    subprocess.check_call(['git', '-C', KALDI_DIR, 'merge-base',
-                           '--is-ancestor', KALDI_MIN_REQUIRED, KALDI_HEAD])
-except subprocess.CalledProcessError:
-    print("\nKaldi installation at {} is not supported.\nPlease update Kaldi "
-          "to match https://github.com/pykaldi/kaldi/tree/pykaldi."
-          .format(KALDI_DIR), file=sys.stderr)
-    sys.exit(1)
 
 with open("Makefile", "w") as makefile:
     print("include {}".format(KALDI_MK_PATH), file=makefile)
@@ -195,24 +248,6 @@ class Extension(setuptools.extension.Extension):
         return "Extension({})".format(self.name)
 
 
-def populate_extension_list():
-    extensions = []
-    lib_dir = os.path.join(BUILD_DIR, "lib")
-    for dirpath, _, filenames in os.walk(os.path.join(lib_dir, "kaldi")):
-
-        lib_path = os.path.relpath(dirpath, lib_dir)
-
-        if lib_path == ".":
-            lib_path = "kaldi"
-
-        for f in filenames:
-            r, e = os.path.splitext(f)
-            if e == ".so":
-                ext_name = "{}.{}".format(lib_path, r)
-                extensions.append(Extension(ext_name))
-    return extensions
-
-
 class build(distutils.command.build.build):
     def finalize_options(self):
         self.build_base = 'build'
@@ -265,7 +300,7 @@ class build_ext(setuptools.command.build_ext.build_ext):
             sys.exit(1)
         print()  # Add an empty line for cleaner output
 
-        self.extensions = populate_extension_list()
+        self.extensions = self.populate_extension_list()
 
         if DEBUG:
             for ext in self.extensions:
@@ -275,6 +310,23 @@ class build_ext(setuptools.command.build_ext.build_ext):
         self.inplace = old_inplace
         if old_inplace:
             self.copy_extensions_to_source()
+
+    def populate_extension_list(self):
+        extensions = []
+        lib_dir = os.path.join(BUILD_DIR, "lib")
+        for dirpath, _, filenames in os.walk(os.path.join(lib_dir, "kaldi")):
+
+            lib_path = os.path.relpath(dirpath, lib_dir)
+
+            if lib_path == ".":
+                lib_path = "kaldi"
+
+            for f in filenames:
+                r, e = os.path.splitext(f)
+                if e == ".so":
+                    ext_name = "{}.{}".format(lib_path, r)
+                    extensions.append(Extension(ext_name))
+        return extensions
 
     def get_ext_filename(self, fullname):
         """Convert the name of an extension (eg. "foo.bar") into the name
@@ -334,7 +386,6 @@ class test_cuda(setuptools.command.test.test):
 extensions = [Extension("kaldi")]
 
 packages = find_packages(exclude=["tests.*", "tests"])
-
 
 setup(name='pykaldi',
       version='0.1.2',
