@@ -31,8 +31,11 @@ def install_system_dep():
     try:
         print("installing system dependencies")
         if platform.system().startswith("Linux"):
-            system_packages = 'autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev'
-            check_call('sudo apt-get install ' + system_packages, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+            system_packages = 'autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev '
+            # python_packages are necessary as cmakeLists.txt cannot find PythonInterp or PythonLibs from virtual env line 15~17
+            python_packages = 'python3-dev python3-pip python3-tk python3-lxml python3-six'
+            check_call('sudo apt-get install ' + system_packages + python_packages, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+
         elif platform.system() == "Darwin":
             check_call('brew install automake cmake git graphviz libtool pkg-config wget', shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
         else:
@@ -54,11 +57,6 @@ def install_clif_dep():
     except (subprocess.CalledProcessError, FileNotFoundError):
         try:
             print("\nCould not find pyclif.\nattempting to install it..", file=sys.stderr)
-            print("\ninstalling pyclif dependency (protobuf)...", file=sys.stderr)
-            check_call(["./check_dependencies.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
-            check_call(["./install_protobuf.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
-            print("\ninstalling pyclif...", file=sys.stderr)
-            check_call(["./install_clif.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
             pyclif_path = find_clif_dep()
             clif_matcher_path = find_clif_matcher()
         except (subprocess.CalledProcessError, FileNotFoundError):
