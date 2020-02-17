@@ -59,7 +59,7 @@ def install_pyclif():
 
 def find_pyclif():
     pyclif_path = os.getenv("PYCLIF")
-    if not PYCLIF:
+    if not pyclif_path:
         pyclif_path = os.path.join(sys.prefix, 'bin/pyclif')
     pyclif_path = os.path.abspath(pyclif_path)
 
