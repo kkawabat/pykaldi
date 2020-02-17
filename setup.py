@@ -43,10 +43,11 @@ def install_pyclif():
     try:
         pyclif_path = find_pyclif()
     except subprocess.CalledProcessError:
-        print("\nCould not find pyclif.\nattempting to install it..", file=sys.stderr)
-        print("\ninstalling pyclif dependency (protobuf)", file=sys.stderr)
         try:
+            print("\nCould not find pyclif.\nattempting to install it..", file=sys.stderr)
+            print("\ninstalling pyclif dependency (protobuf)...", file=sys.stderr)
             check_output(["/bin/bash", "install_protobuf.sh"], cwd=os.path.join(CWD, 'tools'))
+            print("\ninstalling pyclif...", file=sys.stderr)
             check_output(["/bin/bash", "install_clif.sh"], cwd=os.path.join(CWD, 'tools'))
             pyclif_path = find_pyclif()
         except subprocess.CalledProcessError:
