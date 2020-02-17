@@ -57,6 +57,11 @@ def install_clif_dep():
     except (subprocess.CalledProcessError, FileNotFoundError):
         try:
             print("\nCould not find pyclif.\nattempting to install it..", file=sys.stderr)
+            print("\ninstalling pyclif dependency (protobuf)...", file=sys.stderr)
+            check_call(["./install_protobuf.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+            print("\ninstalling pyclif...", file=sys.stderr)
+            check_call(["./install_clif.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+            print("\nrecheck clif dep...", file=sys.stderr)
             pyclif_path = find_clif_dep()
             clif_matcher_path = find_clif_matcher()
         except (subprocess.CalledProcessError, FileNotFoundError):
