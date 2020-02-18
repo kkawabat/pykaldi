@@ -97,6 +97,13 @@ def find_clif_matcher():
     return clif_matcher_path
 
 
+def install_python_dep():
+    check_call(["pip", "install", "--upgrade", "pip"], cwd=CWD, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+    check_call(["pip", "install", "--upgrade", "setuptools"], cwd=CWD, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+    check_call(["pip", "install", "numpy", "pyparsing"], cwd=CWD, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+    check_call(["pip", "install", "ninja"], cwd=CWD, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+
+
 def install_kaldi():
     try:
         kaldi_dir, kaldi_mk_path = find_kaldi()
@@ -143,6 +150,7 @@ KALDI_MIN_REQUIRED = '5dc5d41bb603ba935c6244c7b32788ea90b9cee3'
 DEBUG = os.getenv('DEBUG', 'NO').upper() in ['ON', '1', 'YES', 'TRUE', 'Y']
 
 install_system_dep()
+install_python_dep()
 BUILD_DIR = os.path.join(CWD, 'build')
 
 PYCLIF, CLIF_MATCHER = install_clif_dep()
@@ -417,7 +425,7 @@ setup(name='pykaldi',
       packages=packages,
       package_data={},
       install_requires=['enum34;python_version<"3.4"', 'numpy', 'pyparsing'],
-      setup_requires=['pytest-runner', 'ninja'],
+      setup_requires=['pytest-runner'],
       tests_require=['pytest'],
       zip_safe=False,
       test_suite='tests')
