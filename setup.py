@@ -4,9 +4,10 @@ from __future__ import print_function
 
 import os
 import platform
+import shutil
 import subprocess
 import sys
-
+import traceback
 import distutils.command.build
 import setuptools.command.build_ext
 import setuptools.command.install_lib
@@ -27,22 +28,68 @@ def check_call(*args, **kwargs):
     return subprocess.check_call(*args, **kwargs)
 
 
+def remove_directory(path):
+    if os.path.exists(path):
+        print(f"directory: {path} already exists in pykaldi/tools...")
+        print("deleting folder for a clean build...")
+        shutil.rmtree(path)
+
+
+def run_custom_command(command_list, cwd=CWD):
+    print(f'Running command: {" ".join(command_list)}')
+    p = subprocess.Popen(command_list, cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    # Can use communicate(input='y\n'.encode()) if the command run requires
+    # some confirmation.
+    while p.returncode is None:
+        for pline in p.stdout:
+            print(pline.decode(), end='')  # set returncode if the process has exited
+        p.poll()
+    if p.returncode != 0:
+        raise RuntimeError('Command %s failed: exit code: %s' % (command_list, p.returncode))
+
+
 def install_system_dep():
     try:
         print("installing system dependencies")
         if platform.system().startswith("Linux"):
             system_packages = 'autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev '
-            # python_packages are necessary as cmakeLists.txt cannot find PythonInterp or PythonLibs from virtual env line 15~17
+            # python_packages are necessary as cmakeLists.txt (line 15~17) cannot find PythonInterp or PythonLibs from virtual env \
             python_packages = 'python3-dev python3-pip python3-tk python3-lxml python3-six'
             check_call('sudo apt-get install ' + system_packages + python_packages, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
 
         elif platform.system() == "Darwin":
-            check_call('brew install automake cmake git graphviz libtool pkg-config wget', shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+            # For macOS we first check to see if clang is available and if not prompt installation of it
+            # then depending on macOS version it might not have all the standard libraries (e.g. stdio.h) in the default folder
+            # and depending on the macOS version they might have different default folders in which case we will have to symlink it
+            # for debugging use: "gcc -Wp,-v -E -" in terminal to view paths
+            try:
+                subprocess.check_output(['xcode-select', '--version'])
+            except FileNotFoundError:
+                print("commandline tool for mac os is required")
+                try:
+                    run_custom_command(['xcode-select', '--install'])
+                except subprocess.CalledProcessError:
+                    print('installing commandline tool failed please run "xocde-select --install" in terminal to install it')
+
+            # using the solution here https://stackoverflow.com/a/58349403
+            # if /usr/include is not found then default header libraries directory are probably moved to /usr/local/include
+            # if stdio.h is missing from default header libraries directory then we need to symlink them from the commandline tool sdk
+            if not os.path.exists(os.path.join('/', 'usr', 'include')):
+                if not os.path.exists(os.path.join('/', 'usr', 'local', 'include', 'stdio.h')):
+                    raise FileNotFoundError('could not find standard library for clang please run the following command in a terminal:\n'
+                                            '\t"sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/local/include/"')
+
+            else:
+                if not os.path.exists(os.path.join('usr', 'include', 'stdio.h')):
+                    raise FileNotFoundError("could not find standard library for clang please run the following command in a terminal:\n"
+                                            '\t"sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/include/"')
+
+            run_custom_command(['bash', 'install_dependencies_osx.sh'], cwd=os.path.join(CWD, 'tools'))
         else:
             print("\npykaldi is only compatible with linux or OS X", file=sys.stderr)
             sys.exit(1)
-    except Exception as e:
-        print(f"\nexception occured while installing system dependencies {repr(e)}", file=sys.stderr)
+    except Exception:
+        traceback.print_exc()
         sys.exit(1)
 
 
@@ -57,18 +104,21 @@ def install_clif_dep():
     except (subprocess.CalledProcessError, FileNotFoundError):
         try:
             print("\nCould not find pyclif.\nattempting to install it..", file=sys.stderr)
+            remove_directory(os.path.join(CWD, 'tools', 'protobuf'))
+            remove_directory(os.path.join(CWD, 'tools', 'clif'))
+            remove_directory(os.path.join(CWD, 'tools', 'clif_backend'))
+
             print("\ninstalling pyclif dependency (protobuf)...", file=sys.stderr)
-            check_call(["./install_protobuf.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+            run_custom_command(["bash", "install_protobuf.sh"], cwd=os.path.join(CWD, 'tools'))
+
             print("\ninstalling pyclif...", file=sys.stderr)
-            check_call(["./install_clif.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+            run_custom_command(["./install_clif.sh"], cwd=os.path.join(CWD, 'tools'))
+
             print("\nrecheck clif dep...", file=sys.stderr)
             pyclif_path = find_clif_dep()
             clif_matcher_path = find_clif_matcher()
         except (subprocess.CalledProcessError, FileNotFoundError):
-            import traceback
             traceback.print_exc()
-            print("\nCould not find pyclif and attempt to install failed"
-                  "\nPlease add pyclif binary to your PATH or set PYCLIF environment variable.", file=sys.stderr)
             sys.exit(1)
     return pyclif_path, clif_matcher_path
 
@@ -80,7 +130,7 @@ def find_clif_dep():
     pyclif_path = os.path.abspath(pyclif_path)
 
     if not (os.path.isfile(pyclif_path) and os.access(pyclif_path, os.X_OK)):
-        raise FileNotFoundError("\nCould not find pyclif.\nPlease make sure PYCLIF was installed "
+        raise FileNotFoundError("Could not find pyclif. Please make sure PYCLIF was installed "
                                 "under the current python environment or set PYCLIF environment variable.")
     return pyclif_path
 
@@ -92,16 +142,9 @@ def find_clif_matcher():
     clif_matcher_path = os.path.abspath(clif_matcher_path)
 
     if not (os.path.isfile(clif_matcher_path) and os.access(clif_matcher_path, os.X_OK)):
-        raise FileNotFoundError("\nCould not find clif-matcher.\nPlease make sure CLIF was installed "
+        raise FileNotFoundError("Could not find clif-matcher. Please make sure CLIF was installed "
                                 "under the current python environment or set CLIF_MATCHER environment variable.")
     return clif_matcher_path
-
-
-def install_python_dep():
-    check_call(["pip", "install", "--upgrade", "pip"], cwd=CWD, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
-    check_call(["pip", "install", "--upgrade", "setuptools"], cwd=CWD, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
-    check_call(["pip", "install", "numpy", "pyparsing"], cwd=CWD, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
-    check_call(["pip", "install", "ninja"], cwd=CWD, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
 
 
 def install_kaldi():
@@ -110,7 +153,8 @@ def install_kaldi():
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("\nCould not find pykaldi or kaldi version out of date.\nattempting to install it..", file=sys.stderr)
         try:
-            check_call(["./install_kaldi.sh"], cwd=os.path.join(CWD, 'tools'), shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+            remove_directory(os.path.join(CWD, 'tools', 'kaldi'))
+            run_custom_command(["bash", "install_kaldi.sh"], cwd=os.path.join(CWD, 'tools'))
             kaldi_dir, kaldi_mk_path = find_kaldi()
         except Exception as e:
             print(f"\nattempt to install kaldi failed.. {repr(e)}", file=sys.stderr)
@@ -131,8 +175,7 @@ def find_kaldi():
                                 "directory or set KALDI_DIR environment variable.")
 
     kaldi_head = check_output(['git', '-C', kaldi_dir, 'rev-parse', 'HEAD'])
-    subprocess.check_call(['git', '-C', kaldi_dir, 'merge-base',
-                           '--is-ancestor', KALDI_MIN_REQUIRED, kaldi_head])
+    run_custom_command(['git', '-C', kaldi_dir, 'merge-base', '--is-ancestor', KALDI_MIN_REQUIRED, kaldi_head])
 
     return kaldi_dir, kaldi_mk_path
 
@@ -150,7 +193,6 @@ KALDI_MIN_REQUIRED = '5dc5d41bb603ba935c6244c7b32788ea90b9cee3'
 DEBUG = os.getenv('DEBUG', 'NO').upper() in ['ON', '1', 'YES', 'TRUE', 'Y']
 
 install_system_dep()
-install_python_dep()
 BUILD_DIR = os.path.join(CWD, 'build')
 
 PYCLIF, CLIF_MATCHER = install_clif_dep()
@@ -158,8 +200,7 @@ KALDI_DIR, KALDI_MK_PATH = install_kaldi()
 
 CLANG = os.path.join(os.path.dirname(CLIF_MATCHER), "clang")
 RESOURCE_DIR = check_output("echo '#include <limits.h>' | {} -xc -v - 2>&1 "
-                            "| tr ' ' '\n' | grep -A1 resource-dir | tail -1"
-                            .format(CLANG), shell=True)
+                            "| tr ' ' '\n' | grep -A1 resource-dir | tail -1".format(CLANG), shell=True)
 CLIF_CXX_FLAGS = "-I{}/include".format(RESOURCE_DIR)
 
 with open("Makefile", "w") as makefile:
@@ -174,23 +215,20 @@ if CUDA:
     CUDA_LD_LIBS = check_output(['make', 'print-CUDA_LDLIBS'])
 subprocess.check_call(["rm", "Makefile"])
 
-TFRNNLM_LIB_PATH = os.path.join(KALDI_DIR, "src", "lib",
-                                "libkaldi-tensorflow-rnnlm.so")
+TFRNNLM_LIB_PATH = os.path.join(KALDI_DIR, "src", "lib", "libkaldi-tensorflow-rnnlm.so")
 KALDI_TFRNNLM = True if os.path.exists(TFRNNLM_LIB_PATH) else False
 if KALDI_TFRNNLM:
     with open("Makefile", "w") as makefile:
         TF_DIR = os.path.join(KALDI_DIR, "tools", "tensorflow")
         print("TENSORFLOW = {}".format(TF_DIR), file=makefile)
-        TFRNNLM_MK_PATH = os.path.join(KALDI_DIR, "src", "tfrnnlm",
-                                       "Makefile")
+        TFRNNLM_MK_PATH = os.path.join(KALDI_DIR, "src", "tfrnnlm", "Makefile")
         for line in open(TFRNNLM_MK_PATH):
             if line.startswith("include") or line.startswith("TENSORFLOW"):
                 continue
             print(line, file=makefile, end='')
         print("print-% : ; @echo $($*)", file=makefile)
     TFRNNLM_CXX_FLAGS = check_output(['make', 'print-EXTRA_CXXFLAGS'])
-    TF_LIB_DIR = os.path.join(KALDI_DIR, "tools", "tensorflow",
-                              "bazel-bin", "tensorflow")
+    TF_LIB_DIR = os.path.join(KALDI_DIR, "tools", "tensorflow", "bazel-bin", "tensorflow")
     subprocess.check_call(["rm", "Makefile"])
 
 if platform.system() == "Darwin":
@@ -283,25 +321,15 @@ class build_ext(setuptools.command.build_ext.build_ext):
         old_inplace, self.inplace = self.inplace, 0
 
         import numpy as np
-        CMAKE_ARGS = ['-DKALDI_DIR=' + KALDI_DIR,
-                      '-DPYCLIF=' + PYCLIF,
-                      '-DCLIF_MATCHER=' + CLIF_MATCHER,
-                      '-DCXX_FLAGS=' + CXX_FLAGS,
-                      '-DCLIF_CXX_FLAGS=' + CLIF_CXX_FLAGS,
-                      '-DLD_FLAGS=' + LD_FLAGS,
-                      '-DLD_LIBS=' + LD_LIBS,
-                      '-DNUMPY_INC_DIR=' + np.get_include(),
-                      '-DCUDA=TRUE' if CUDA else '-DCUDA=FALSE',
-                      '-DTFRNNLM=TRUE' if KALDI_TFRNNLM else '-DTFRNNLM=FALSE',
+        CMAKE_ARGS = ['-DKALDI_DIR=' + KALDI_DIR, '-DPYCLIF=' + PYCLIF, '-DCLIF_MATCHER=' + CLIF_MATCHER, '-DCXX_FLAGS=' + CXX_FLAGS, '-DCLIF_CXX_FLAGS=' + CLIF_CXX_FLAGS, '-DLD_FLAGS=' + LD_FLAGS,
+                      '-DLD_LIBS=' + LD_LIBS, '-DNUMPY_INC_DIR=' + np.get_include(), '-DCUDA=TRUE' if CUDA else '-DCUDA=FALSE', '-DTFRNNLM=TRUE' if KALDI_TFRNNLM else '-DTFRNNLM=FALSE',
                       '-DDEBUG=TRUE' if DEBUG else '-DDEBUG=FALSE']
 
         if CUDA:
-            CMAKE_ARGS += ['-DCUDA_LD_FLAGS=' + CUDA_LD_FLAGS,
-                           '-DCUDA_LD_LIBS=' + CUDA_LD_LIBS]
+            CMAKE_ARGS += ['-DCUDA_LD_FLAGS=' + CUDA_LD_FLAGS, '-DCUDA_LD_LIBS=' + CUDA_LD_LIBS]
 
         if KALDI_TFRNNLM:
-            CMAKE_ARGS += ['-DTFRNNLM_CXX_FLAGS=' + TFRNNLM_CXX_FLAGS,
-                           '-DTF_LIB_DIR=' + TF_LIB_DIR]
+            CMAKE_ARGS += ['-DTFRNNLM_CXX_FLAGS=' + TFRNNLM_CXX_FLAGS, '-DTF_LIB_DIR=' + TF_LIB_DIR]
 
         if CMAKE_GENERATOR:
             CMAKE_ARGS += [CMAKE_GENERATOR]
@@ -376,8 +404,7 @@ class build_sphinx(Command):
             import sphinx
             subprocess.check_call([MAKE, 'docs'], cwd=BUILD_DIR)
         except ImportError:
-            print("Sphinx was not found. Install it using pip install sphinx.",
-                  file=sys.stderr)
+            print("Sphinx was not found. Install it using pip install sphinx.", file=sys.stderr)
             sys.exit(1)
 
 
@@ -410,22 +437,6 @@ extensions = [Extension("kaldi")]
 
 packages = find_packages(exclude=["tests.*", "tests"])
 
-setup(name='pykaldi',
-      version='0.1.2',
-      description='A Python wrapper for Kaldi',
-      author='Dogan Can, Victor Martinez',
-      ext_modules=extensions,
-      cmdclass={
-          'build': build,
-          'build_ext': build_ext,
-          'build_sphinx': build_sphinx,
-          'install_lib': install_lib,
-          'test_cuda': test_cuda,
-      },
-      packages=packages,
-      package_data={},
-      install_requires=['enum34;python_version<"3.4"', 'numpy', 'pyparsing'],
-      setup_requires=['pytest-runner'],
-      tests_require=['pytest'],
-      zip_safe=False,
-      test_suite='tests')
+setup(name='pykaldi', version='0.1.2', description='A Python wrapper for Kaldi', author='Dogan Can, Victor Martinez', ext_modules=extensions,
+      cmdclass={'build': build, 'build_ext': build_ext, 'build_sphinx': build_sphinx, 'install_lib': install_lib, 'test_cuda': test_cuda, }, packages=packages, package_data={},
+      install_requires=['enum34;python_version<"3.4"', 'numpy', 'pyparsing'], setup_requires=['pytest-runner'], tests_require=['pytest'], zip_safe=False, test_suite='tests')
