@@ -13,11 +13,48 @@ import setuptools.command.build_ext
 import setuptools.command.install_lib
 import setuptools.command.test
 import setuptools.extension
-
-from distutils.file_util import copy_file
 from setuptools import setup, find_packages, Command
 
 CWD = os.path.dirname(os.path.abspath(__file__))
+
+
+def run_clang_setup():
+    # For macOS we first check to see if clang is available and if not prompt installation of it
+    # then depending on macOS version it might not have all the standard libraries (e.g. stdio.h) in the default folder
+    # and depending on the macOS version they might have different default folders in which case we will have to symlink it
+    # for debugging use: "gcc -Wp,-v -E -" in terminal to view paths
+    try:
+        subprocess.check_output(['xcode-select', '--version'])
+    except FileNotFoundError:
+        print("commandline tool for mac os is required")
+        try:
+            run_custom_command(['xcode-select', '--install'])
+        except subprocess.CalledProcessError:
+            print('installing commandline tool failed please run "xocde-select --install" in terminal to install it')
+
+    # these flags are set so that make can see the header files stored in MacOSX.sdk see https://stackoverflow.com/a/58359366
+    os.environ['CFLAGS'] = os.environ.get('CFLAGS', "") + ' -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+    os.environ['CCFLAGS'] = os.environ.get('CCFLAGS', "") + ' -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+    os.environ['CXXFLAGS'] = os.environ.get('CXXFLAGS', "") + ' -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+    os.environ['CPPFLAGS'] = os.environ.get('CPPFLAGS', "") + ' -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+
+    # export CFLAGS+=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+    # export CCFLAGS+=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+    # export CXXFLAGS+=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+    # export CPPFLAGS+=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+
+    # # using the solution here https://stackoverflow.com/a/58349403
+    # # if /usr/include is not found then default header libraries directory are probably moved to /usr/local/include
+    # # if stdio.h is missing from default header libraries directory then we need to symlink them from the commandline tool sdk
+    # if not os.path.exists(os.path.join('/', 'usr', 'include')):
+    #     if not os.path.exists(os.path.join('/', 'usr', 'local', 'include', 'stdio.h')):
+    #         raise FileNotFoundError('could not find standard library for clang please run the following command in a terminal:\n'
+    #                                 '\t"sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/local/include/"')
+    #
+    # else:
+    #     if not os.path.exists(os.path.join('usr', 'include', 'stdio.h')):
+    #         raise FileNotFoundError("could not find standard library for clang please run the following command in a terminal:\n"
+    #                                 '\t"sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/include/"')
 
 
 def check_output(*args, **kwargs):
@@ -50,7 +87,7 @@ def run_custom_command(command_list, cwd=CWD):
 
 def install_system_dep():
     try:
-        print("installing system dependencies")
+        print("checking system dependencies...")
         if platform.system().startswith("Linux"):
             system_packages = 'autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev '
             # python_packages are necessary as cmakeLists.txt (line 15~17) cannot find PythonInterp or PythonLibs from virtual env \
@@ -58,32 +95,6 @@ def install_system_dep():
             check_call('sudo apt-get install ' + system_packages + python_packages, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
 
         elif platform.system() == "Darwin":
-            # For macOS we first check to see if clang is available and if not prompt installation of it
-            # then depending on macOS version it might not have all the standard libraries (e.g. stdio.h) in the default folder
-            # and depending on the macOS version they might have different default folders in which case we will have to symlink it
-            # for debugging use: "gcc -Wp,-v -E -" in terminal to view paths
-            try:
-                subprocess.check_output(['xcode-select', '--version'])
-            except FileNotFoundError:
-                print("commandline tool for mac os is required")
-                try:
-                    run_custom_command(['xcode-select', '--install'])
-                except subprocess.CalledProcessError:
-                    print('installing commandline tool failed please run "xocde-select --install" in terminal to install it')
-
-            # using the solution here https://stackoverflow.com/a/58349403
-            # if /usr/include is not found then default header libraries directory are probably moved to /usr/local/include
-            # if stdio.h is missing from default header libraries directory then we need to symlink them from the commandline tool sdk
-            if not os.path.exists(os.path.join('/', 'usr', 'include')):
-                if not os.path.exists(os.path.join('/', 'usr', 'local', 'include', 'stdio.h')):
-                    raise FileNotFoundError('could not find standard library for clang please run the following command in a terminal:\n'
-                                            '\t"sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/local/include/"')
-
-            else:
-                if not os.path.exists(os.path.join('usr', 'include', 'stdio.h')):
-                    raise FileNotFoundError("could not find standard library for clang please run the following command in a terminal:\n"
-                                            '\t"sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/include/"')
-
             run_custom_command(['bash', 'install_dependencies_osx.sh'], cwd=os.path.join(CWD, 'tools'))
         else:
             print("\npykaldi is only compatible with linux or OS X", file=sys.stderr)
@@ -94,6 +105,7 @@ def install_system_dep():
 
 
 def install_clif_dep():
+
     """look for pyclif if not found try and install pyclif, if install fails then exit setup process"""
     try:
         pyclif_path = find_clif_dep()
@@ -191,6 +203,9 @@ KALDI_MIN_REQUIRED = '5dc5d41bb603ba935c6244c7b32788ea90b9cee3'
 ################################################################################
 
 DEBUG = os.getenv('DEBUG', 'NO').upper() in ['ON', '1', 'YES', 'TRUE', 'Y']
+
+if platform.system() == 'Darwin':
+    run_clang_setup()
 
 install_system_dep()
 BUILD_DIR = os.path.join(CWD, 'build')
@@ -293,6 +308,7 @@ if DEBUG:
     print("MAKE:", MAKE, *MAKE_ARGS)
     print("#" * 50)
 
+print("preprocess finished without major issues.")
 
 ################################################################################
 # Use CMake to build Python extensions in parallel
@@ -439,4 +455,4 @@ packages = find_packages(exclude=["tests.*", "tests"])
 
 setup(name='pykaldi', version='0.1.2', description='A Python wrapper for Kaldi', author='Dogan Can, Victor Martinez', ext_modules=extensions,
       cmdclass={'build': build, 'build_ext': build_ext, 'build_sphinx': build_sphinx, 'install_lib': install_lib, 'test_cuda': test_cuda, }, packages=packages, package_data={},
-      install_requires=['enum34;python_version<"3.4"', 'numpy', 'pyparsing'], setup_requires=['pytest-runner'], tests_require=['pytest'], zip_safe=False, test_suite='tests')
+      install_requires=['numpy', 'pyparsing'], setup_requires=['pytest-runner'], tests_require=['pytest'], zip_safe=False, test_suite='tests')
