@@ -32,29 +32,24 @@ def run_clang_setup():
         except subprocess.CalledProcessError:
             print('installing commandline tool failed please run "xocde-select --install" in terminal to install it')
 
+    # using the solution here https://stackoverflow.com/a/58349403
+    # if /usr/include is not found then default header libraries directory are probably moved to /usr/local/include
+    # if stdio.h is missing from default header libraries directory then we need to symlink them from the commandline tool sdk
+    if not os.path.exists(os.path.join('/', 'usr', 'include')):
+        if not os.path.exists(os.path.join('/', 'usr', 'local', 'include', 'stdio.h')):
+            raise FileNotFoundError('could not find standard library for clang please run the following command in a terminal:\n'
+                                    '\t"sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/local/include/"')
+
+    else:
+        if not os.path.exists(os.path.join('usr', 'include', 'stdio.h')):
+            raise FileNotFoundError("could not find standard library for clang please run the following command in a terminal:\n"
+                                    '\t"sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/include/"')
+
     # these flags are set so that make can see the header files stored in MacOSX.sdk see https://stackoverflow.com/a/58359366
     os.environ['CFLAGS'] = os.environ.get('CFLAGS', "") + ' -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
     os.environ['CCFLAGS'] = os.environ.get('CCFLAGS', "") + ' -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
     os.environ['CXXFLAGS'] = os.environ.get('CXXFLAGS', "") + ' -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
     os.environ['CPPFLAGS'] = os.environ.get('CPPFLAGS', "") + ' -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
-
-    # export CFLAGS+=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-    # export CCFLAGS+=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-    # export CXXFLAGS+=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-    # export CPPFLAGS+=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-
-    # # using the solution here https://stackoverflow.com/a/58349403
-    # # if /usr/include is not found then default header libraries directory are probably moved to /usr/local/include
-    # # if stdio.h is missing from default header libraries directory then we need to symlink them from the commandline tool sdk
-    # if not os.path.exists(os.path.join('/', 'usr', 'include')):
-    #     if not os.path.exists(os.path.join('/', 'usr', 'local', 'include', 'stdio.h')):
-    #         raise FileNotFoundError('could not find standard library for clang please run the following command in a terminal:\n'
-    #                                 '\t"sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/local/include/"')
-    #
-    # else:
-    #     if not os.path.exists(os.path.join('usr', 'include', 'stdio.h')):
-    #         raise FileNotFoundError("could not find standard library for clang please run the following command in a terminal:\n"
-    #                                 '\t"sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/include/"')
 
 
 def check_output(*args, **kwargs):
