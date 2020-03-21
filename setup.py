@@ -95,7 +95,7 @@ def install_system_dep():
             # python_packages are necessary as cmakeLists.txt (line 15~17) cannot find PythonInterp or PythonLibs from virtual env \
 
             # use sudo only if user is not root
-            sudo_prefix = "" if os.geteuid() != 0 else "sudo "
+            sudo_prefix = "" if os.geteuid() == 0 else "sudo "
 
             check_call(f'{sudo_prefix}apt-get install autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev '
                        'python3-dev python3-pip python3-tk python3-lxml python3-six'.split())
