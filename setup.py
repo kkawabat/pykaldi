@@ -63,10 +63,6 @@ def check_output(*args, **kwargs):
     return subprocess.check_output(*args, **kwargs).decode("utf-8").strip()
 
 
-def check_call(*args, **kwargs):
-    return subprocess.check_call(*args, **kwargs)
-
-
 def remove_directory(path):
     if os.path.exists(path):
         print(f"directory: {path} already exists in pykaldi/tools...")
@@ -97,7 +93,7 @@ def install_system_dep():
             # use sudo only if user is not root
             sudo_prefix = "" if os.geteuid() == 0 else "sudo "
 
-            check_call(f'{sudo_prefix}apt-get install autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev '
+            run_custom_command(f'{sudo_prefix}apt-get install autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev '
                        'python3-dev python3-pip python3-tk python3-lxml python3-six'.split())
 
         elif platform.system() == "Darwin":
