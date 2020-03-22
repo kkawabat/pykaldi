@@ -92,9 +92,9 @@ def install_system_dep():
 
             # use sudo only if user is not root
             sudo_prefix = "" if os.geteuid() == 0 else "sudo "
-
-            run_custom_command(f'{sudo_prefix}apt-get install autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev '
-                       'python3-dev python3-pip python3-tk python3-lxml python3-six'.split())
+            os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
+            subprocess.check_output(f'{sudo_prefix}apt-get -yq install autoconf automake cmake curl g++ git graphviz libatlas3-base libtool make pkg-config subversion unzip wget zlib1g-dev '
+                                    f'python3-dev python3-pip python3-tk python3-lxml python3-six'.split())
 
         elif platform.system() == "Darwin":
             run_custom_command(['bash', 'install_dependencies_osx.sh'], cwd=os.path.join(CWD, 'tools'))
@@ -107,7 +107,6 @@ def install_system_dep():
 
 
 def install_clif_dep():
-
     """look for pyclif if not found try and install pyclif, if install fails then exit setup process"""
     try:
         pyclif_path = find_clif_dep()
@@ -311,6 +310,7 @@ if DEBUG:
     print("#" * 50)
 
 print("preprocess finished without major issues.")
+
 
 ################################################################################
 # Use CMake to build Python extensions in parallel
