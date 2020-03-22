@@ -142,9 +142,12 @@ fi
 
 mkdir -p "$LLVM_DIR"
 cd "$LLVM_DIR"
-svn co https://llvm.org/svn/llvm-project/llvm/trunk@307315 llvm
+# svn co http://llvm.org/svn/llvm-project/llvm/trunk@307315 llvm
+svn export -r307315 https://github.com/llvm/llvm-project/trunk/llvm/
+
 cd llvm/tools
-svn co https://llvm.org/svn/llvm-project/cfe/trunk@307315 clang
+# svn co http://llvm.org/svn/llvm-project/cfe/trunk@307315 clang
+svn export -r307315 https://github.com/llvm/llvm-project/trunk/clang/
 ln -s -f -n "$CLIF_DIR/clif" clif
 
 # Build and install the CLIF backend.  Our backend is part of the llvm build.
