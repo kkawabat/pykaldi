@@ -38,6 +38,11 @@ RUN pip install --upgrade pip \
 # Copy pykaldi directory into the container
 COPY . /pykaldi
 
+# apt-get install -y sox is required so ./extras/check_dependencies.sh runs properly
+# currently investigating why kaldi's script at
+# https://github.com/kaldi-asr/kaldi/blob/master/tools/extras/check_dependencies.sh
+# fails to run
+RUN apt-get install -y sox
 # Install Protobuf, CLIF, Kaldi and PyKaldi
 RUN cd /pykaldi/tools \
     && ./check_dependencies.sh \
