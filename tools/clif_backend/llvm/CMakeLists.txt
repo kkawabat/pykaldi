@@ -503,18 +503,18 @@ option(LLVM_BUILD_RUNTIME
   "Build the LLVM runtime libraries." ON)
 option(LLVM_BUILD_EXAMPLES
   "Build the LLVM example programs. If OFF, just generate build targets." OFF)
-option(LLVM_INCLUDE_EXAMPLES "Generate build targets for the LLVM examples" OFF)
+option(LLVM_INCLUDE_EXAMPLES "Generate build targets for the LLVM examples" ON)
 
 option(LLVM_BUILD_TESTS
   "Build LLVM unit tests. If OFF, just generate build targets." OFF)
-option(LLVM_INCLUDE_TESTS "Generate build targets for the LLVM unit tests." OFF)
-option(LLVM_INCLUDE_GO_TESTS "Include the Go bindings tests in test build targets." OFF)
+option(LLVM_INCLUDE_TESTS "Generate build targets for the LLVM unit tests." ON)
+option(LLVM_INCLUDE_GO_TESTS "Include the Go bindings tests in test build targets." ON)
 
 option (LLVM_BUILD_DOCS "Build the llvm documentation." OFF)
-option (LLVM_INCLUDE_DOCS "Generate build targets for llvm documentation." OFF)
+option (LLVM_INCLUDE_DOCS "Generate build targets for llvm documentation." ON)
 option (LLVM_ENABLE_DOXYGEN "Use doxygen to generate llvm API documentation." OFF)
 option (LLVM_ENABLE_SPHINX "Use Sphinx to generate llvm documentation." OFF)
-option (LLVM_ENABLE_OCAMLDOC "Build OCaml bindings documentation." OFF)
+option (LLVM_ENABLE_OCAMLDOC "Build OCaml bindings documentation." ON)
 
 set(LLVM_INSTALL_DOXYGEN_HTML_DIR "share/doc/llvm/doxygen-html"
     CACHE STRING "Doxygen-generated HTML documentation install directory")
