@@ -23,10 +23,10 @@ touch "python/.use_default_python"
 
 ./extras/check_dependencies.sh
 
-make -j4
+make -j $(nproc)
 
 cd ../src
-./configure --shared
-make clean -j && make depend -j && make -j4
+./configure --shared --use-cuda=no
+make clean -j $(nproc) && make depend -j $(nproc) && make -j $(nproc) base matrix util feat tree gmm transform fstext hmm lm decoder lat kws
 
 echo "Done installing Kaldi."

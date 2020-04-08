@@ -20,7 +20,8 @@ add_pyclif_library("_compressed_matrix" compressed-matrix.clif
   LIBRARIES kaldi-matrix
 )
 add_pyclif_library("_sparse_matrix" sparse-matrix.clif
-  CLIF_DEPS _iostream _compressed_matrix _cu_matrix
+# CLIF_DEPS _iostream _compressed_matrix _cu_matrix
+  CLIF_DEPS _iostream _compressed_matrix
   LIBRARIES kaldi-matrix
 )
 add_pyclif_library("_packed_matrix" packed-matrix.clif

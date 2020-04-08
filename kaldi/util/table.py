@@ -218,24 +218,24 @@ class SequentialCompactLatticeReader(
     """Sequential table reader for compact lattices."""
     pass
 
-
-class SequentialNnetExampleReader(_SequentialReaderBase,
-                                  _kaldi_table.SequentialNnetExampleReader):
-    """Sequential table reader for nnet examples."""
-    pass
-
-
-class SequentialNnetChainExampleReader(
-        _SequentialReaderBase,
-        _kaldi_table.SequentialNnetChainExampleReader):
-    """Sequential table reader for nnet chain examples."""
-    pass
-
-
-class SequentialRnnlmExampleReader(_SequentialReaderBase,
-                                  _kaldi_table.SequentialRnnlmExampleReader):
-    """Sequential table reader for RNNLM examples."""
-    pass
+#
+# class SequentialNnetExampleReader(_SequentialReaderBase,
+#                                   _kaldi_table.SequentialNnetExampleReader):
+#     """Sequential table reader for nnet examples."""
+#     pass
+#
+#
+# class SequentialNnetChainExampleReader(
+#         _SequentialReaderBase,
+#         _kaldi_table.SequentialNnetChainExampleReader):
+#     """Sequential table reader for nnet chain examples."""
+#     pass
+#
+#
+# class SequentialRnnlmExampleReader(_SequentialReaderBase,
+#                                   _kaldi_table.SequentialRnnlmExampleReader):
+#     """Sequential table reader for RNNLM examples."""
+#     pass
 
 
 class SequentialIntReader(_SequentialReaderBase,
@@ -473,17 +473,17 @@ class RandomAccessCompactLatticeReader(
     pass
 
 
-class RandomAccessNnetExampleReader(_RandomAccessReaderBase,
-                                    _kaldi_table.RandomAccessNnetExampleReader):
-    """Random access table reader for nnet examples."""
-    pass
-
-
-class RandomAccessNnetChainExampleReader(
-        _RandomAccessReaderBase,
-        _kaldi_table.RandomAccessNnetChainExampleReader):
-    """Random access table reader for nnet chain examples."""
-    pass
+# class RandomAccessNnetExampleReader(_RandomAccessReaderBase,
+#                                     _kaldi_table.RandomAccessNnetExampleReader):
+#     """Random access table reader for nnet examples."""
+#     pass
+#
+#
+# class RandomAccessNnetChainExampleReader(
+#         _RandomAccessReaderBase,
+#         _kaldi_table.RandomAccessNnetChainExampleReader):
+#     """Random access table reader for nnet chain examples."""
+#     pass
 
 
 class RandomAccessIntReader(_RandomAccessReaderBase,
@@ -899,19 +899,19 @@ class CompactLatticeWriter(_WriterBase, _kaldi_table.CompactLatticeWriter):
     pass
 
 
-class NnetExampleWriter(_WriterBase, _kaldi_table.NnetExampleWriter):
-    """Table writer for nnet examples."""
-    pass
-
-
-class NnetChainExampleWriter(_WriterBase, _kaldi_table.NnetChainExampleWriter):
-    """Table writer for nnet chain examples."""
-    pass
-
-
-class RnnlmExampleWriter(_WriterBase, _kaldi_table.RnnlmExampleWriter):
-    """Table writer for RNNLM examples."""
-    pass
+# class NnetExampleWriter(_WriterBase, _kaldi_table.NnetExampleWriter):
+#     """Table writer for nnet examples."""
+#     pass
+#
+#
+# class NnetChainExampleWriter(_WriterBase, _kaldi_table.NnetChainExampleWriter):
+#     """Table writer for nnet chain examples."""
+#     pass
+#
+#
+# class RnnlmExampleWriter(_WriterBase, _kaldi_table.RnnlmExampleWriter):
+#     """Table writer for RNNLM examples."""
+#     pass
 
 
 class IntWriter(_WriterBase, _kaldi_table.IntWriter):

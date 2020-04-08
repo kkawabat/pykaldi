@@ -138,13 +138,14 @@ else
   echo "Using make.  Build will take a long time.  Consider installing ninja."
 fi
 
-# Download, build and install LLVM and Clang (needs a specific revision).
+# llvm and clang is predownloaded into clif_backend as svn co takes a very long time to execute
+# build and install LLVM and Clang (needs a specific revision).
 
 mkdir -p "$LLVM_DIR"
 cd "$LLVM_DIR"
-svn co https://llvm.org/svn/llvm-project/llvm/trunk@307315 llvm
+#svn co https://llvm.org/svn/llvm-project/llvm/trunk@307315 llvm
 cd llvm/tools
-svn co https://llvm.org/svn/llvm-project/cfe/trunk@307315 clang
+#svn co https://llvm.org/svn/llvm-project/cfe/trunk@307315 clang
 ln -s -f -n "$CLIF_DIR/clif" clif
 
 # Build and install the CLIF backend.  Our backend is part of the llvm build.

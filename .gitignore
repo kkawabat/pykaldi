@@ -1,7 +1,7 @@
 # tools dir
 /tools/protobuf/
 /tools/clif/
-/tools/clif_backend/
+!/tools/clif_backend/llvm/
 /tools/kaldi/
 
 # Emacs backup files
