@@ -24,37 +24,26 @@ RUN apt-get update \
     zlib1g-dev \
     && ln -s /usr/bin/python3 /usr/bin/python \
     && ln -s /usr/bin/pip3 /usr/bin/pip \
-    && pip install --upgrade pip numpy setuptools pyparsing jupyter ninja \
-    && cd / \
-    && git clone https://github.com/kkawabat/pykaldi.git \
-    && git clone -b pykaldi https://github.com/pykaldi/kaldi.git \
-    && cd kaldi/tools \
-    && mkdir -p python \
-    && touch python/.use_default_python \
-    && make -j12 openfst OPENFST_CONFIGURE="--enable-shared --enable-bin --disable-dependency-tracking" \
-    && rm -rf openfst/src/script/.libs \
-    && cd ../src \
-    && ./configure --use-cuda=no --shared \
-    && make -j $(nproc) base matrix util feat tree gmm transform fstext hmm lm decoder lat kws
-    && find . -name "*.a" -delete \
-    && find . -name "*.o" -delete \
-    && cd / \
-    && git clone https://github.com/google/protobuf.git protobuf \
-    && cd protobuf \
-    && ./autogen.sh \
-    && ./configure --prefix /usr --disable-static --disable-dependency-tracking \
-    && make -j $(nproc) \
-    && make install \
-    && cd python \
-    && python setup.py build \
-    && python setup.py install \
-    # && cd /pykaldi/tools \
-    && cd / \
-    && rm -rf protobuf \
-    && cd /pykaldi/tools/ \
-    && ./install_clif.sh \
-    && rm -rf clif_backend \
-    && rm -rf clif \
-    && cd /pykaldi \
-    && python setup.py develop
+    && pip install --upgrade pip numpy setuptools pyparsing jupyter ninja
 
+RUN cd / \
+    && git clone https://github.com/kkawabat/pykaldi.git \
+    && cd pykaldi \
+    && git checkout develop
+
+RUN cd /pykaldi/tools \
+    && ./install_protobuf.sh
+
+RUN cd /pykaldi/tools \
+    && ./install_clif.sh
+
+RUN cd /pykaldi/tools \
+    && ./install_kaldi.sh
+
+RUN cd /pykaldi/tools \
+    && rm -rf protobuf \
+    && rm -rf clif_backend \
+    && rm -rf clif
+
+RUN cd /pykaldi \
+    && python setup.py install

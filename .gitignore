@@ -1,7 +1,6 @@
 # tools dir
 /tools/protobuf/
 /tools/clif/
-!/tools/clif_backend/llvm/
 /tools/kaldi/
 
 # Emacs backup files
@@ -123,3 +122,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+!/tools/clif_backend/llvm/
+!/tools/clif_backend/llvm/*
