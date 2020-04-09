@@ -124,6 +124,6 @@ ENV/
 
 # include llvm directory
 !/tools/clif_backend/
-
 /tools/clif_backend/*
 !/tools/clif_backend/llvm
+!/tools/clif_backend/llvm/*/*
