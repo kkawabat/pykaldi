@@ -154,6 +154,18 @@ ln -s -f -n "$CLIF_DIR/clif" clif
 
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
+echo "start of cmake:"
+echo $(cmake -DCMAKE_INSTALL_PREFIX="$PYTHON_ENV/clang" \
+      -DCMAKE_PREFIX_PATH="$PROTOBUF_PREFIX_PATH" \
+      -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=true \
+      -DLLVM_INSTALL_TOOLCHAIN_ONLY=true \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DLLVM_BUILD_DOCS=false \
+      -DLLVM_TARGETS_TO_BUILD=X86 \
+      "${CMAKE_PY_FLAGS[@]}" \
+      "${CXX_SYSTEM_INCLUDE_DIR_FLAGS}" \
+      "${CMAKE_G_FLAGS[@]}" "$LLVM_DIR/llvm")
+
 cmake -DCMAKE_INSTALL_PREFIX="$PYTHON_ENV/clang" \
       -DCMAKE_PREFIX_PATH="$PROTOBUF_PREFIX_PATH" \
       -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=true \
@@ -164,7 +176,11 @@ cmake -DCMAKE_INSTALL_PREFIX="$PYTHON_ENV/clang" \
       "${CMAKE_PY_FLAGS[@]}" \
       "${CXX_SYSTEM_INCLUDE_DIR_FLAGS}" \
       "${CMAKE_G_FLAGS[@]}" "$LLVM_DIR/llvm"
-"$MAKE_OR_NINJA" "${MAKE_PARALLELISM[@]}" clif-matcher clif_python_utils_proto_util
+echo "start of clif-matcher"
+"$MAKE_OR_NINJA" "${MAKE_PARALLELISM[@]}" clif-matcher
+echo "start of clif_python_utils_proto_util"
+"$MAKE_OR_NINJA" "${MAKE_PARALLELISM[@]}" clif_python_utils_proto_util
+echo "start of install"
 "$MAKE_OR_NINJA" "${MAKE_INSTALL_PARALLELISM[@]}" install
 
 # Get back to the CLIF Python directory and have pip run setup.py.

@@ -22,6 +22,8 @@ RUN apt-get update \
     unzip \
     wget \
     zlib1g-dev \
+    sox \
+    && ln -s /usr/bin/python2.7 /usr/bin/python \
     && pip3 install --upgrade pip numpy setuptools pyparsing jupyter ninja
 
 RUN cd / \
