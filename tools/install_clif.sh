@@ -141,10 +141,11 @@ fi
 # Download, build and install LLVM and Clang (needs a specific revision).
 
 mkdir -p "$LLVM_DIR"
+#svn ls 'https://llvm.org/svn/llvm-project/cfe/trunk@307315' | parallel svn export 'https://llvm.org/svn/llvm-project/cfe/trunk/'{}'@307315'
 cd "$LLVM_DIR"
-svn co https://llvm.org/svn/llvm-project/llvm/trunk@307315 llvm
+#svn co https://llvm.org/svn/llvm-project/llvm/trunk@307315 llvm
 cd llvm/tools
-svn co https://llvm.org/svn/llvm-project/cfe/trunk@307315 clang
+#svn co https://llvm.org/svn/llvm-project/cfe/trunk@307315 clang
 ln -s -f -n "$CLIF_DIR/clif" clif
 
 # Build and install the CLIF backend.  Our backend is part of the llvm build.
