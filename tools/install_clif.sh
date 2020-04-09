@@ -155,16 +155,6 @@ ln -s -f -n "$CLIF_DIR/clif" clif
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 echo "start of cmake:"
-echo $(cmake -DCMAKE_INSTALL_PREFIX="$PYTHON_ENV/clang" \
-      -DCMAKE_PREFIX_PATH="$PROTOBUF_PREFIX_PATH" \
-      -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=true \
-      -DLLVM_INSTALL_TOOLCHAIN_ONLY=true \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DLLVM_BUILD_DOCS=false \
-      -DLLVM_TARGETS_TO_BUILD=X86 \
-      "${CMAKE_PY_FLAGS[@]}" \
-      "${CXX_SYSTEM_INCLUDE_DIR_FLAGS}" \
-      "${CMAKE_G_FLAGS[@]}" "$LLVM_DIR/llvm")
 
 cmake -DCMAKE_INSTALL_PREFIX="$PYTHON_ENV/clang" \
       -DCMAKE_PREFIX_PATH="$PROTOBUF_PREFIX_PATH" \

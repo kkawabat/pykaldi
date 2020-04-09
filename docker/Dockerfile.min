@@ -1,5 +1,5 @@
 # Dockerfile for building PyKaldi min image
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 # We do this in a single RUN so that it does not add weight by creating layers
 RUN apt-get update \
@@ -22,9 +22,10 @@ RUN apt-get update \
     unzip \
     wget \
     zlib1g-dev \
+    nano \
     sox \
     && ln -s /usr/bin/python2.7 /usr/bin/python \
-    && pip3 install --upgrade pip numpy setuptools pyparsing jupyter ninja
+    && pip3 install --upgrade pip numpy setuptools pyparsing jupyter
 
 RUN cd / \
     && git clone https://github.com/kkawabat/pykaldi.git \
@@ -35,6 +36,8 @@ RUN cd /pykaldi/tools \
     && ./install_protobuf.sh python3
 
 RUN cd /pykaldi/tools \
+    && ./install_clif.sh python3; exit 0 \
+    && ./install_clif.sh python3; exit 0 \
     && ./install_clif.sh python3
 
 RUN cd /pykaldi/tools \
