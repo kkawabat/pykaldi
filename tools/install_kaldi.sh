@@ -23,18 +23,16 @@ touch "python/.use_default_python"
 
 ./extras/check_dependencies.sh
 
-make -j 4
+make -j 8
 
 cd ../src
 ./configure --use-cuda=no --shared
-make clean -j 4
-make depend -j 4
-make checkversion -j 4
-make kaldi.mk -j 4
-make mklibdir -j 4
-make base matrix util feat tree gmm transform \
-      fstext hmm lm decoder lat kws \
-      bin fstbin gmmbin featbin latbin kwsbin -j 4
+make clean -j 8
+make depend -j 8
+make checkversion -j 8
+make kaldi.mk -j 8
+make mklibdir -j 8
+make base matrix util feat tree gmm transform fstext hmm lm decoder lat kws bin fstbin gmmbin featbin latbin kwsbin lmbin -j 8
 
 
 echo "Done installing Kaldi."
