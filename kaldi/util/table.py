@@ -17,12 +17,14 @@ from ._kaldi_table import (read_script_file, write_script_file,
 from . import _kaldi_table_ext
 import kaldi.matrix as _matrix
 
+
 ################################################################################
 # Sequential Readers
 ################################################################################
 
 class _SequentialReaderBase(object):
     """Base class defining the Python API for sequential table readers."""
+
     def __init__(self, rspecifier=""):
         """
         This class is used for reading objects sequentially from an archive or
@@ -183,7 +185,7 @@ class SequentialPosteriorReader(_SequentialReaderBase,
 
 
 class SequentialGaussPostReader(_SequentialReaderBase,
-                                     _kaldi_table.SequentialGaussPostReader):
+                                _kaldi_table.SequentialGaussPostReader):
     """Sequential table reader for Gaussian-level frame posteriors."""
     pass
 
@@ -201,7 +203,7 @@ class SequentialLogFstReader(_SequentialReaderBase,
 
 
 class SequentialKwsIndexFstReader(_SequentialReaderBase,
-                             _kaldi_table_ext.SequentialKwsIndexFstReader):
+                                  _kaldi_table_ext.SequentialKwsIndexFstReader):
     """Sequential table reader for FSTs over the KWS index semiring."""
     pass
 
@@ -213,28 +215,9 @@ class SequentialLatticeReader(_SequentialReaderBase,
 
 
 class SequentialCompactLatticeReader(
-        _SequentialReaderBase,
-        _kaldi_table.SequentialCompactLatticeReader):
+    _SequentialReaderBase,
+    _kaldi_table.SequentialCompactLatticeReader):
     """Sequential table reader for compact lattices."""
-    pass
-
-
-class SequentialNnetExampleReader(_SequentialReaderBase,
-                                  _kaldi_table.SequentialNnetExampleReader):
-    """Sequential table reader for nnet examples."""
-    pass
-
-
-class SequentialNnetChainExampleReader(
-        _SequentialReaderBase,
-        _kaldi_table.SequentialNnetChainExampleReader):
-    """Sequential table reader for nnet chain examples."""
-    pass
-
-
-class SequentialRnnlmExampleReader(_SequentialReaderBase,
-                                  _kaldi_table.SequentialRnnlmExampleReader):
-    """Sequential table reader for RNNLM examples."""
     pass
 
 
@@ -257,7 +240,7 @@ class SequentialDoubleReader(_SequentialReaderBase,
 
 
 class SequentialBoolReader(_SequentialReaderBase,
-                          _kaldi_table.SequentialBoolReader):
+                           _kaldi_table.SequentialBoolReader):
     """Sequential table reader for Booleans."""
     pass
 
@@ -269,24 +252,25 @@ class SequentialIntVectorReader(_SequentialReaderBase,
 
 
 class SequentialIntVectorVectorReader(
-        _SequentialReaderBase,
-        _kaldi_table.SequentialIntVectorVectorReader):
+    _SequentialReaderBase,
+    _kaldi_table.SequentialIntVectorVectorReader):
     """Sequential table reader for sequences of integer sequences."""
     pass
 
 
 class SequentialIntPairVectorReader(
-        _SequentialReaderBase,
-        _kaldi_table.SequentialIntPairVectorReader):
+    _SequentialReaderBase,
+    _kaldi_table.SequentialIntPairVectorReader):
     """Sequential table reader for sequences of integer pairs."""
     pass
 
 
 class SequentialFloatPairVectorReader(
-        _SequentialReaderBase,
-        _kaldi_table.SequentialFloatPairVectorReader):
+    _SequentialReaderBase,
+    _kaldi_table.SequentialFloatPairVectorReader):
     """Sequential table reader for sequences of single precision float pairs."""
     pass
+
 
 ################################################################################
 # Random Access Readers
@@ -294,6 +278,7 @@ class SequentialFloatPairVectorReader(
 
 class _RandomAccessReaderBase(object):
     """Base class defining the Python API for random access table readers."""
+
     def __init__(self, rspecifier=""):
         """
         This class is used for randomly accessing objects in an archive or
@@ -399,8 +384,8 @@ class RandomAccessVectorReader(_RandomAccessReaderBase,
 
 
 class RandomAccessDoubleVectorReader(
-        _RandomAccessReaderBase,
-        _kaldi_table.RandomAccessDoubleVectorReader):
+    _RandomAccessReaderBase,
+    _kaldi_table.RandomAccessDoubleVectorReader):
     """Random access table reader for double precision vectors."""
     pass
 
@@ -412,8 +397,8 @@ class RandomAccessMatrixReader(_RandomAccessReaderBase,
 
 
 class RandomAccessDoubleMatrixReader(
-        _RandomAccessReaderBase,
-        _kaldi_table.RandomAccessDoubleMatrixReader):
+    _RandomAccessReaderBase,
+    _kaldi_table.RandomAccessDoubleMatrixReader):
     """Random access table reader for double precision matrices."""
     pass
 
@@ -437,7 +422,7 @@ class RandomAccessPosteriorReader(_RandomAccessReaderBase,
 
 
 class RandomAccessGaussPostReader(_RandomAccessReaderBase,
-                                       _kaldi_table.RandomAccessGaussPostReader):
+                                  _kaldi_table.RandomAccessGaussPostReader):
     """Random access table reader for Gaussian-level frame posteriors."""
     pass
 
@@ -455,7 +440,7 @@ class RandomAccessLogFstReader(_RandomAccessReaderBase,
 
 
 class RandomAccessKwsIndexFstReader(_RandomAccessReaderBase,
-                               _kaldi_table_ext.RandomAccessKwsIndexFstReader):
+                                    _kaldi_table_ext.RandomAccessKwsIndexFstReader):
     """Random access table reader for FSTs over the KWS index semiring."""
     pass
 
@@ -467,22 +452,9 @@ class RandomAccessLatticeReader(_RandomAccessReaderBase,
 
 
 class RandomAccessCompactLatticeReader(
-        _RandomAccessReaderBase,
-        _kaldi_table.RandomAccessCompactLatticeReader):
+    _RandomAccessReaderBase,
+    _kaldi_table.RandomAccessCompactLatticeReader):
     """Random access table reader for compact lattices."""
-    pass
-
-
-class RandomAccessNnetExampleReader(_RandomAccessReaderBase,
-                                    _kaldi_table.RandomAccessNnetExampleReader):
-    """Random access table reader for nnet examples."""
-    pass
-
-
-class RandomAccessNnetChainExampleReader(
-        _RandomAccessReaderBase,
-        _kaldi_table.RandomAccessNnetChainExampleReader):
-    """Random access table reader for nnet chain examples."""
     pass
 
 
@@ -517,26 +489,27 @@ class RandomAccessIntVectorReader(_RandomAccessReaderBase,
 
 
 class RandomAccessIntVectorVectorReader(
-        _RandomAccessReaderBase,
-        _kaldi_table.RandomAccessIntVectorVectorReader):
+    _RandomAccessReaderBase,
+    _kaldi_table.RandomAccessIntVectorVectorReader):
     """Random access table reader for sequences of integer sequences."""
     pass
 
 
 class RandomAccessIntPairVectorReader(
-        _RandomAccessReaderBase,
-        _kaldi_table.RandomAccessIntPairVectorReader):
+    _RandomAccessReaderBase,
+    _kaldi_table.RandomAccessIntPairVectorReader):
     """Random access table reader for sequences of integer pairs."""
     pass
 
 
 class RandomAccessFloatPairVectorReader(
-        _RandomAccessReaderBase,
-        _kaldi_table.RandomAccessFloatPairVectorReader):
+    _RandomAccessReaderBase,
+    _kaldi_table.RandomAccessFloatPairVectorReader):
     """
     Random access table reader for sequences of single precision float pairs.
     """
     pass
+
 
 ################################################################################
 # Mapped Random Access Readers
@@ -546,6 +519,7 @@ class _RandomAccessReaderMappedBase(object):
     """
     Base class defining the Python API for mapped random access table readers.
     """
+
     def __init__(self, table_rspecifier="", map_rspecifier=""):
         """
         This class is used for randomly accessing objects in an archive or
@@ -654,38 +628,39 @@ class _RandomAccessReaderMappedBase(object):
 
 
 class RandomAccessVectorReaderMapped(
-        _RandomAccessReaderMappedBase,
-        _kaldi_table.RandomAccessVectorReaderMapped):
+    _RandomAccessReaderMappedBase,
+    _kaldi_table.RandomAccessVectorReaderMapped):
     """Mapped random access table reader for single precision vectors."""
     pass
 
 
 class RandomAccessDoubleVectorReaderMapped(
-        _RandomAccessReaderMappedBase,
-        _kaldi_table.RandomAccessDoubleVectorReaderMapped):
+    _RandomAccessReaderMappedBase,
+    _kaldi_table.RandomAccessDoubleVectorReaderMapped):
     """Mapped random access table reader for double precision vectors."""
     pass
 
 
 class RandomAccessMatrixReaderMapped(
-        _RandomAccessReaderMappedBase,
-        _kaldi_table.RandomAccessMatrixReaderMapped):
+    _RandomAccessReaderMappedBase,
+    _kaldi_table.RandomAccessMatrixReaderMapped):
     """Mapped random access table reader for single precision matrices."""
     pass
 
 
 class RandomAccessDoubleMatrixReaderMapped(
-        _RandomAccessReaderMappedBase,
-        _kaldi_table.RandomAccessDoubleMatrixReaderMapped):
+    _RandomAccessReaderMappedBase,
+    _kaldi_table.RandomAccessDoubleMatrixReaderMapped):
     """Mapped random access table reader for double precision matrices."""
     pass
 
 
 class RandomAccessFloatReaderMapped(
-        _RandomAccessReaderMappedBase,
-        _kaldi_table.RandomAccessFloatReaderMapped):
+    _RandomAccessReaderMappedBase,
+    _kaldi_table.RandomAccessFloatReaderMapped):
     """Mapped random access table reader for single precision floats."""
     pass
+
 
 ################################################################################
 # Writers
@@ -693,6 +668,7 @@ class RandomAccessFloatReaderMapped(
 
 class _WriterBase(object):
     """Base class defining the additional Python API for table writers."""
+
     def __init__(self, wspecifier=""):
         """
 
@@ -776,6 +752,7 @@ class _WriterBase(object):
 
 class VectorWriter(_WriterBase, _kaldi_table.VectorWriter):
     """Table writer for single precision vectors."""
+
     def write(self, key, value):
         """Writes the `(key, value)` pair to the table.
 
@@ -793,6 +770,7 @@ class VectorWriter(_WriterBase, _kaldi_table.VectorWriter):
 
 class DoubleVectorWriter(_WriterBase, _kaldi_table.DoubleVectorWriter):
     """Table writer for double precision vectors."""
+
     def write(self, key, value):
         """Writes the `(key, value)` pair to the table.
 
@@ -810,6 +788,7 @@ class DoubleVectorWriter(_WriterBase, _kaldi_table.DoubleVectorWriter):
 
 class MatrixWriter(_WriterBase, _kaldi_table.MatrixWriter):
     """Table writer for single precision matrices."""
+
     def write(self, key, value):
         """Writes the `(key, value)` pair to the table.
 
@@ -827,6 +806,7 @@ class MatrixWriter(_WriterBase, _kaldi_table.MatrixWriter):
 
 class DoubleMatrixWriter(_WriterBase, _kaldi_table.DoubleMatrixWriter):
     """Table writer for double precision matrices."""
+
     def write(self, key, value):
         """Writes the `(key, value)` pair to the table.
 
@@ -841,9 +821,10 @@ class DoubleMatrixWriter(_WriterBase, _kaldi_table.DoubleMatrixWriter):
         """
         super(DoubleMatrixWriter, self).write(key, _matrix.DoubleMatrix(value))
 
-      
+
 class CompressedMatrixWriter(_WriterBase, _kaldi_table.CompressedMatrixWriter):
     """Table writer for compressed matrices."""
+
     def write(self, key, value):
         """Writes the `(key, value)` pair to the table.
 
@@ -857,8 +838,8 @@ class CompressedMatrixWriter(_WriterBase, _kaldi_table.CompressedMatrixWriter):
         if not isinstance(value, _matrix.compressed.CompressedMatrix):
             raise ValueError("value needs to be a CompressedMatrix")
         super(CompressedMatrixWriter, self).write(key, value)
-      
-      
+
+
 class WaveWriter(_WriterBase, _kaldi_table.WaveWriter):
     """Table writer for wave files."""
     pass
@@ -896,21 +877,6 @@ class LatticeWriter(_WriterBase, _kaldi_table.LatticeWriter):
 
 class CompactLatticeWriter(_WriterBase, _kaldi_table.CompactLatticeWriter):
     """Table writer for compact lattices."""
-    pass
-
-
-class NnetExampleWriter(_WriterBase, _kaldi_table.NnetExampleWriter):
-    """Table writer for nnet examples."""
-    pass
-
-
-class NnetChainExampleWriter(_WriterBase, _kaldi_table.NnetChainExampleWriter):
-    """Table writer for nnet chain examples."""
-    pass
-
-
-class RnnlmExampleWriter(_WriterBase, _kaldi_table.RnnlmExampleWriter):
-    """Table writer for RNNLM examples."""
     pass
 
 
@@ -952,6 +918,7 @@ class IntPairVectorWriter(_WriterBase, _kaldi_table.IntPairVectorWriter):
 class FloatPairVectorWriter(_WriterBase, _kaldi_table.FloatPairVectorWriter):
     """Table writer for sequences of single precision float pairs."""
     pass
+
 
 ################################################################################
 
