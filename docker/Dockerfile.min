@@ -28,9 +28,8 @@ RUN apt-get update \
     && ln -s /usr/bin/python3.6 /usr/bin/python \
     && pip3 install --upgrade pip numpy setuptools pyparsing jupyter \
     && cd / \
-    && git clone https://github.com/kkawabat/pykaldi.git \
+    && git clone -b minimize https://github.com/kkawabat/pykaldi.git \
     && cd pykaldi \
-    && git checkout minimize \
     && cd /pykaldi/tools \
     && ./install_protobuf.sh python3 \
     && cd /pykaldi/tools \
