@@ -29,12 +29,9 @@ RUN apt-get update \
     && pip3 install --upgrade pip numpy setuptools pyparsing jupyter \
     && cd / \
     && git clone -b minimize https://github.com/kkawabat/pykaldi.git \
-    && cd pykaldi \
     && cd /pykaldi/tools \
     && ./install_protobuf.sh python3 \
-    && cd /pykaldi/tools \
     && ./install_clif.sh python3 \
-    && cd /pykaldi/tools \
     && ./install_kaldi.sh \
     && cd kaldi/src \
     && find . -name "*.a" -delete \

@@ -33,7 +33,6 @@ make clean -j 4
 echo "compiling kaldi library dependencies"
 make depend -j 4
 echo "compiling kaldi libraries for speechmetrics"
-make all SUBDIRS="base matrix util feat tree gmm transform fstext hmm lm decoder lat kws bin fstbin gmmbin featbin latbin kwsbin lmbin" -j 4
-
+make -j 4
 
 echo "Done installing Kaldi."
