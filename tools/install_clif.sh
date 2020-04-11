@@ -130,11 +130,11 @@ else
   CMAKE_G_FLAGS=()  # The default generates a Makefile.
   MAKE_OR_NINJA="make"
   MAKE_PARALLELISM=(-j 4)
-  if [[ -r /proc/cpuinfo ]]; then
-    N_CPUS="$(cat /proc/cpuinfo | grep -c ^processor)"
-    [[ "$N_CPUS" -gt 0 ]] && MAKE_PARALLELISM=(-j $N_CPUS)
-    MAKE_INSTALL_PARALLELISM=(${MAKE_PARALLELISM[@]})
-  fi
+#  if [[ -r /proc/cpuinfo ]]; then
+#    N_CPUS="$(cat /proc/cpuinfo | grep -c ^processor)"
+#    [[ "$N_CPUS" -gt 0 ]] && MAKE_PARALLELISM=(-j $N_CPUS)
+#    MAKE_INSTALL_PARALLELISM=(${MAKE_PARALLELISM[@]})
+#  fi
   echo "Using make.  Build will take a long time.  Consider installing ninja."
 fi
 
@@ -168,8 +168,10 @@ cmake -DCMAKE_INSTALL_PREFIX="$PYTHON_ENV/clang" \
       "${CMAKE_G_FLAGS[@]}" "$LLVM_DIR/llvm"
 echo "start of clif-matcher"
 "$MAKE_OR_NINJA" "${MAKE_PARALLELISM[@]}" clif-matcher
+
 echo "start of clif_python_utils_proto_util"
 "$MAKE_OR_NINJA" "${MAKE_PARALLELISM[@]}" clif_python_utils_proto_util
+
 echo "start of install"
 "$MAKE_OR_NINJA" "${MAKE_INSTALL_PARALLELISM[@]}" install
 
