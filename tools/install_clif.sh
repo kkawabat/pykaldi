@@ -125,11 +125,11 @@ else
 fi
 
 cd "$CLIF_DIR"
-git pull
+git pull --ff-only
 
 declare -a CMAKE_G_FLAGS
 declare -a MAKE_PARALLELISM
-if which ninja; then
+if $use_ninja && which ninja; then
   CMAKE_G_FLAGS=(-G Ninja)
   MAKE_OR_NINJA="ninja"
   MAKE_PARALLELISM=()  # Ninja does this on its own.
@@ -151,6 +151,11 @@ else
 fi
 
 # Download, build and install LLVM and Clang (needs a specific revision).
+if [ $clif_backend_stage -le 0 ]; then
+  if [ -d "$LLVM_DIR" ]; then
+      echo "clif_backend exists deleting directory for a fresh install...."
+      rm -rf "$LLVM_DIR"
+  fi
 
   mkdir -p "$LLVM_DIR"
   cd "$LLVM_DIR"
@@ -165,18 +170,44 @@ fi
 
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
-cmake -DCMAKE_INSTALL_PREFIX="$PYTHON_ENV/clang" \
-      -DCMAKE_PREFIX_PATH="$PROTOBUF_PREFIX_PATH" \
-      -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=true \
-      -DLLVM_INSTALL_TOOLCHAIN_ONLY=true \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DLLVM_BUILD_DOCS=false \
-      -DLLVM_TARGETS_TO_BUILD=X86 \
-      "${CMAKE_PY_FLAGS[@]}" \
-      "${CXX_SYSTEM_INCLUDE_DIR_FLAGS}" \
-      "${CMAKE_G_FLAGS[@]}" "$LLVM_DIR/llvm"
-"$MAKE_OR_NINJA" "${MAKE_PARALLELISM[@]}" clif-matcher clif_python_utils_proto_util
-"$MAKE_OR_NINJA" "${MAKE_INSTALL_PARALLELISM[@]}" install
+
+export CPATH=/Library/Developer/CommandLineTools/usr/include/c++/v1:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/
+export CFLAGS+='-isystem /Library/Developer/CommandLineTools/usr/include/c++/v1 '
+export CFLAGS+='-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk '
+export CCFLAGS+='-isystem /Library/Developer/CommandLineTools/usr/include/c++/v1 '
+export CCFLAGS+='-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk '
+export CXXFLAGS+='-isystem /Library/Developer/CommandLineTools/usr/include/c++/v1 '
+export CXXFLAGS+='-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk '
+export CPPFLAGS+='-isystem /Library/Developer/CommandLineTools/usr/include/c++/v1 '
+export CPPFLAGS+='-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk '
+echo $CPPFLAGS
+
+if [ $clif_backend_stage -le 1 ]; then
+  cmake -DCMAKE_INSTALL_PREFIX="$PYTHON_ENV/clang" \
+        -DCMAKE_PREFIX_PATH="$PROTOBUF_PREFIX_PATH" \
+        -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=true \
+        -DLLVM_INSTALL_TOOLCHAIN_ONLY=true \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DLLVM_BUILD_DOCS=false \
+        -DLLVM_TARGETS_TO_BUILD=X86 \
+        "${CMAKE_PY_FLAGS[@]}" \
+        "${CXX_SYSTEM_INCLUDE_DIR_FLAGS}" \
+        "${CMAKE_G_FLAGS[@]}" "$LLVM_DIR/llvm"
+fi
+
+if [ $clif_backend_stage -le 2 ]; then
+  "$MAKE_OR_NINJA" "${MAKE_PARALLELISM[@]}" clif-matcher
+fi
+
+if [ $clif_backend_stage -le 3 ]; then
+  echo "clif-matcher finished building, building clif_python_utils_proto_util..."
+  "$MAKE_OR_NINJA" "${MAKE_PARALLELISM[@]}" clif_python_utils_proto_util
+fi
+
+if [ $clif_backend_stage -le 4 ]; then
+  echo "clif_python_utils_proto_util finished building, building install..."
+  "$MAKE_OR_NINJA" "${MAKE_INSTALL_PARALLELISM[@]}" install
+fi
 
 # Get back to the CLIF Python directory and have pip run setup.py.
 
