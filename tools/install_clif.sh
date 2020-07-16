@@ -24,6 +24,18 @@
 #   PYTHON_LIBRARY - overrides the python library to use
 
 set -e
+# set this to false to use 'make' or true to use 'ninja'
+# if 'ninja' does not exists it defaults to 'make'
+use_ninja=false
+
+# flag to skip steps in building clif backend
+# set to 0 to start from downloading llvm+clang from github
+# set to 1 to run from cmake build_matcher
+# set to 2 to run from building clif_matcher
+# set to 3 to run from building clif_python_utils_proto_util
+# set to 4 to run from build_matcher install
+# set to 5 to skip 0-4 entirely
+clif_backend_stage=3
 
 TOOLS_DIR="$PWD"
 CLIF_DIR="$PWD/clif"
