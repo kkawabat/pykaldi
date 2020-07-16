@@ -140,16 +140,13 @@ fi
 
 # Download, build and install LLVM and Clang (needs a specific revision).
 
-mkdir -p "$LLVM_DIR"
-cd "$LLVM_DIR"
-# svn co http://llvm.org/svn/llvm-project/llvm/trunk@307315 llvm
-svn export -r307315 https://github.com/llvm/llvm-project/trunk/llvm/
+  mkdir -p "$LLVM_DIR"
+  cd "$LLVM_DIR"
+  git clone https://github.com/kkawabat/clif_backend.git .
 
-cd llvm/tools
-# svn co http://llvm.org/svn/llvm-project/cfe/trunk@307315 clang
-svn export -r307315 https://github.com/llvm/llvm-project/trunk/clang/
-ln -s -f -n "$CLIF_DIR/clif" clif
-
+  cd "$LLVM_DIR/llvm/tools"
+  ln -s -f -n "$CLIF_DIR/clif" clif
+fi
 # Build and install the CLIF backend.  Our backend is part of the llvm build.
 # NOTE: To speed up, we build only for X86. If you need it for a different
 # arch, change it to your arch, or just remove the =X86 line below.
