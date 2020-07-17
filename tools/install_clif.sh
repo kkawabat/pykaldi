@@ -35,7 +35,7 @@ use_ninja=false
 # set to 3 to run from building clif_python_utils_proto_util
 # set to 4 to run from build_matcher install
 # set to 5 to skip 0-4 entirely
-clif_backend_stage=3
+clif_backend_stage=0
 
 TOOLS_DIR="$PWD"
 CLIF_DIR="$PWD/clif"
@@ -98,20 +98,23 @@ PYCLIF_LDFLAGS="$(pkg-config --libs protobuf)"
 CXX_SYSTEM_INCLUDE_DIR_FLAGS=
 if [ "`uname`" == "Darwin" ]; then
   PYCLIF_CFLAGS="${PYCLIF_CFLAGS} -stdlib=libc++"
-  XCODE_TOOLCHAIN_DIR="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"
-  COMMAND_LINE_TOOLCHAIN_DIR="/Library/Developer/CommandLineTools/usr/include/c++/v1"
   MACOS_SDK_PATH=$(xcrun --sdk macosx --show-sdk-path)
-  if [ -d "$XCODE_TOOLCHAIN_DIR" ]; then
-    CXX_SYSTEM_INCLUDE_DIR="${XCODE_TOOLCHAIN_DIR} -isystem${MACOS_SDK_PATH}"
-  elif [ -d "$COMMAND_LINE_TOOLCHAIN_DIR" ]; then
-    CXX_SYSTEM_INCLUDE_DIR="${COMMAND_LINE_TOOLCHAIN_DIR} -isystem${MACOS_SDK_PATH}"
+  COMMAND_LINE_TOOLCHAIN_CXX_DIR="/Library/Developer/CommandLineTools/usr/include/c++/v1"
+  XCODE_TOOLCHAIN_CXX_DIR="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"
+  if [ -d "$XCODE_TOOLCHAIN_CXX_DIR" ]; then
+    CXX_SYSTEM_INCLUDE_DIR="${XCODE_TOOLCHAIN_CXX_DIR} -isystem ${MACOS_SDK_PATH}"
+  elif [ -d "$COMMAND_LINE_TOOLCHAIN_CXX_DIR" ]; then
+    CXX_SYSTEM_INCLUDE_DIR="${COMMAND_LINE_TOOLCHAIN_CXX_DIR} -isystem ${MACOS_SDK_PATH}"
   else
     echo "Could not find toolchain directory!"
     echo "Install xcode command line tools, e.g. xcode-select --install"
     exit 1
   fi
-  CXX_SYSTEM_INCLUDE_DIR_FLAGS="-DCXX_SYSTEM_INCLUDE_DIR=\"$CXX_SYSTEM_INCLUDE_DIR\""
-  echo $CXX_SYSTEM_INCLUDE_DIR_FLAGS
+  CXX_SYSTEM_INCLUDE_DIR_FLAGS="-DCXX_SYSTEM_INCLUDE_DIR=$CXX_SYSTEM_INCLUDE_DIR"
+#  export CXXFLAGS="-isystem$CXX_SYSTEM_INCLUDE_DIR -isystem$MACOS_SDK_PATH"
+#  echo "CXXFLAGS: $CXXFLAGS"
+  echo "CXX_SYSTEM_INCLUDE_DIR_FLAGS: $CXX_SYSTEM_INCLUDE_DIR_FLAGS"
+  exit 0
 fi
 
 ######################################################################
@@ -172,9 +175,6 @@ fi
 
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
-
-export CXXFLAGS='-isystem/Library/Developer/CommandLineTools/usr/include/c++/v1 -isystem/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
-
 
 if [ $clif_backend_stage -le 1 ]; then
   cmake -DCMAKE_INSTALL_PREFIX="$PYTHON_ENV/clang" \
