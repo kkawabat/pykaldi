@@ -102,19 +102,16 @@ if [ "`uname`" == "Darwin" ]; then
   COMMAND_LINE_TOOLCHAIN_CXX_DIR="/Library/Developer/CommandLineTools/usr/include/c++/v1"
   XCODE_TOOLCHAIN_CXX_DIR="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"
   if [ -d "$XCODE_TOOLCHAIN_CXX_DIR" ]; then
-    CXX_SYSTEM_INCLUDE_DIR="${XCODE_TOOLCHAIN_CXX_DIR} -isystem ${MACOS_SDK_PATH}"
+    CXX_SYSTEM_INCLUDE_DIR="${XCODE_TOOLCHAIN_CXX_DIR} -isystem${MACOS_SDK_PATH}/usr/include"
   elif [ -d "$COMMAND_LINE_TOOLCHAIN_CXX_DIR" ]; then
-    CXX_SYSTEM_INCLUDE_DIR="${COMMAND_LINE_TOOLCHAIN_CXX_DIR} -isystem ${MACOS_SDK_PATH}"
+    CXX_SYSTEM_INCLUDE_DIR="${COMMAND_LINE_TOOLCHAIN_CXX_DIR} -isystem${MACOS_SDK_PATH}/usr/include"
   else
     echo "Could not find toolchain directory!"
     echo "Install xcode command line tools, e.g. xcode-select --install"
     exit 1
   fi
   CXX_SYSTEM_INCLUDE_DIR_FLAGS="-DCXX_SYSTEM_INCLUDE_DIR=$CXX_SYSTEM_INCLUDE_DIR"
-#  export CXXFLAGS="-isystem$CXX_SYSTEM_INCLUDE_DIR -isystem$MACOS_SDK_PATH"
-#  echo "CXXFLAGS: $CXXFLAGS"
   echo "CXX_SYSTEM_INCLUDE_DIR_FLAGS: $CXX_SYSTEM_INCLUDE_DIR_FLAGS"
-  exit 0
 fi
 
 ######################################################################
