@@ -235,7 +235,7 @@ class build_ext(setuptools.command.build_ext.build_ext):
                       '-DCLIF_CXX_FLAGS=' + CLIF_CXX_FLAGS,
                       '-DLD_FLAGS=' + LD_FLAGS,
                       '-DLD_LIBS=' + LD_LIBS,
-                      # '-DPYTHON_INCLUDE_DIR=' + sysconfig.get_config_var("INCLUDEPY"),
+                      '-DPYTHON_INCLUDE_DIR=' + sysconfig.get_config_var("INCLUDEPY"),
                       '-DNUMPY_INC_DIR=' + np.get_include(),
                       '-DCUDA=TRUE' if CUDA else '-DCUDA=FALSE',
                       '-DTFRNNLM=TRUE' if KALDI_TFRNNLM else '-DTFRNNLM=FALSE',
