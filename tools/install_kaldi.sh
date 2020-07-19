@@ -15,7 +15,7 @@ else
 fi
 
 cd "$KALDI_DIR/tools"
-git pull
+git pull --ff-only
 
 # Prevent kaldi from switching default python version
 mkdir -p "python"

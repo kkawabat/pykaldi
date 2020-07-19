@@ -26,7 +26,7 @@
 set -e
 # set this to false to use 'make' or true to use 'ninja'
 # if 'ninja' does not exists it defaults to 'make'
-use_ninja=false
+use_ninja=true
 
 # flag to skip steps in building clif backend
 # set to 0 to start from downloading llvm+clang from github
