@@ -235,7 +235,9 @@ class build_ext(setuptools.command.build_ext.build_ext):
                       '-DCLIF_CXX_FLAGS=' + CLIF_CXX_FLAGS,
                       '-DLD_FLAGS=' + LD_FLAGS,
                       '-DLD_LIBS=' + LD_LIBS,
-                      # '-DPYTHON_INCLUDE_DIR=' + sysconfig.get_config_var("INCLUDEPY"),
+                      #below two line is from https://stackoverflow.com/a/38121972
+                      '-DPYTHON_INCLUDE_DIR=' + sysconfig.get_python_inc(),
+                      '-DPYTHON_LIBRARY=' + sysconfig.get_config_var('LIBDIR'),
                       '-DNUMPY_INC_DIR=' + np.get_include(),
                       '-DCUDA=TRUE' if CUDA else '-DCUDA=FALSE',
                       '-DTFRNNLM=TRUE' if KALDI_TFRNNLM else '-DTFRNNLM=FALSE',
