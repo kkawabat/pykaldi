@@ -99,11 +99,11 @@ CXX_SYSTEM_INCLUDE_DIR_FLAGS=
 if [ "`uname`" == "Darwin" ]; then
   PYCLIF_CFLAGS="${PYCLIF_CFLAGS} -stdlib=libc++"
   MACOS_SDK_PATH=$(xcrun --sdk macosx --show-sdk-path)
-  COMMAND_LINE_TOOLCHAIN_CXX_DIR="/Library/Developer/CommandLineTools/usr/include/c++/v1"
-  XCODE_TOOLCHAIN_CXX_DIR="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"
-  if [ -d "$XCODE_TOOLCHAIN_CXX_DIR" ]; then
+  if echo "$MACOS_SDK_PATH"|grep -q Xcode.app; then
+    XCODE_TOOLCHAIN_CXX_DIR="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"
     CXX_SYSTEM_INCLUDE_DIR="${XCODE_TOOLCHAIN_CXX_DIR} -isystem${MACOS_SDK_PATH}/usr/include"
-  elif [ -d "$COMMAND_LINE_TOOLCHAIN_CXX_DIR" ]; then
+  elif echo "$MACOS_SDK_PATH"|grep -q CommandLineTools; then
+    COMMAND_LINE_TOOLCHAIN_CXX_DIR="/Library/Developer/CommandLineTools/usr/include/c++/v1"
     CXX_SYSTEM_INCLUDE_DIR="${COMMAND_LINE_TOOLCHAIN_CXX_DIR} -isystem${MACOS_SDK_PATH}/usr/include"
   else
     echo "Could not find toolchain directory!"
@@ -111,7 +111,6 @@ if [ "`uname`" == "Darwin" ]; then
     exit 1
   fi
   CXX_SYSTEM_INCLUDE_DIR_FLAGS="-DCXX_SYSTEM_INCLUDE_DIR=$CXX_SYSTEM_INCLUDE_DIR"
-  echo "CXX_SYSTEM_INCLUDE_DIR_FLAGS: $CXX_SYSTEM_INCLUDE_DIR_FLAGS"
 fi
 
 ######################################################################
