@@ -118,12 +118,11 @@ if KALDI_TFRNNLM:
     subprocess.check_call(["rm", "Makefile"])
 
 if platform.system() == "Darwin":
-    XCODE_TOOLCHAIN_DIR = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain"
-    COMMAND_LINE_TOOLCHAIN_DIR = "/Library/Developer/CommandLineTools"
-    if os.path.isdir(XCODE_TOOLCHAIN_DIR):
-        TOOLCHAIN_DIR = XCODE_TOOLCHAIN_DIR
-    elif os.path.isdir(COMMAND_LINE_TOOLCHAIN_DIR):
-        TOOLCHAIN_DIR = COMMAND_LINE_TOOLCHAIN_DIR
+    default_macos_sdk_path = subprocess.check_output(['xcrun', '--sdk', 'macosx', '--show-sdk-path']).decode()
+    if "Xcode.app" in default_macos_sdk_path:
+        TOOLCHAIN_DIR = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain"
+    elif "CommandLineTools" in default_macos_sdk_path:
+        TOOLCHAIN_DIR = "/Library/Developer/CommandLineTools"
     else:
         print("\nCould not find toolchain directory!\nInstall xcode command "
               "line tools, e.g. xcode-select --install", file=sys.stderr)
