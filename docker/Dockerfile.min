@@ -25,6 +25,7 @@ RUN apt-get update \
     zlib1g-dev \
     nano \
     sox \
+    libfree6* \
     # && ln -s /usr/bin/python2.7 /usr/bin/python \
     && ln -sf /usr/bin/python3.7 /usr/bin/python3 \
     && ln -sf /usr/bin/python3.7-config /usr/bin/python3-config \
