@@ -1,9 +1,13 @@
 # Dockerfile for building PyKaldi min image
 FROM ubuntu:18.04
 
+# when building locally, add more CPU and memory resources to the build process
+# `docker build --memory=10GB --cpu-shares=4 -t a2/pykaldi:small-0.2 -f docker/Dockerfile.min .`
+
 # We do this in a single RUN so that it does not add weight by creating layers
 RUN apt-get update \
     && apt-get install -y \
+    && apt-get -y upgrade \
     python3.7 \
     python3.7-dev \
     python3-pip \
@@ -25,7 +29,6 @@ RUN apt-get update \
     zlib1g-dev \
     nano \
     sox \
-    libfree6* \
     # && ln -s /usr/bin/python2.7 /usr/bin/python \
     && ln -sf /usr/bin/python3.7 /usr/bin/python3 \
     && ln -sf /usr/bin/python3.7-config /usr/bin/python3-config \
